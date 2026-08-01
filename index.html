@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Toys: small pages that break a misconception</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111a2e; --panel2:#0e1626; --line:#22304d;
+    --ink:#e6edf7; --muted:#93a4c3; --accent:#fbbf24; --good:#34d399;
+    --fs:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(1200px 800px at 30% -10%, #16223c 0%, var(--bg) 55%);
+    color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:var(--fs); min-height:100vh; padding:34px clamp(14px,4vw,28px) 50px;
+  }
+  body.present{--fs:20px;}
+  .wrap{max-width:1000px; margin:0 auto;}
+  h1{font-size:1.7em; letter-spacing:.3px;}
+  h1 span{color:var(--accent);}
+  .sub{color:var(--muted); font-size:.9em; margin-top:10px; max-width:66ch; line-height:1.6;}
+  .grid{display:grid; gap:14px; margin-top:26px;
+        grid-template-columns:repeat(auto-fill,minmax(290px,1fr));}
+  a.toy, div.toy{
+    display:block; background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:16px 18px; text-decoration:none; color:inherit;
+  }
+  a.toy:hover{border-color:#3b82f6; background:linear-gradient(180deg,#1a2a4a,#12203d);}
+  div.toy{opacity:.5;}
+  .toy h2{font-size:1.02em; letter-spacing:.2px;}
+  .toy .kills{color:var(--muted); font-size:.82em; line-height:1.5; margin-top:8px;}
+  .toy .kills b{color:var(--ink); font-weight:600;}
+  .tag{display:inline-block; margin-top:12px; padding:4px 10px; border-radius:99px;
+       font-size:.7em; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
+       background:#34d39922; color:var(--good); border:1px solid #34d39955;}
+  .tag.soon{background:#93a4c322; color:var(--muted); border-color:#93a4c344;}
+  h3{font-size:.75em; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted);
+     margin:34px 0 12px;}
+  .rules{color:var(--muted); font-size:.84em; line-height:1.7; padding-left:1.1em;}
+  .rules b{color:var(--ink); font-weight:600;}
+  footer{color:var(--muted); font-size:.78em; line-height:1.7; margin-top:32px;
+         border-top:1px solid var(--line); padding-top:16px;}
+  footer a{color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>AI Toys: <span>small pages that break a misconception</span></h1>
+  <p class="sub">
+    Each one is a single self-contained page built to kill one specific wrong idea about AI and
+    machine learning that slides reliably fail to kill. No install, no account, no network, no real
+    model. Save the page and it still works. Companion to
+    <a href="https://michael-borck.github.io/security-toys/" style="color:var(--accent)">Security Toys</a>.
+  </p>
+
+  <div class="grid">
+
+    <div class="toy">
+      <h2>Threshold Dial</h2>
+      <p class="kills">Kills: <b>&ldquo;overall accuracy means it works&rdquo;</b>. A headline 85% can hide
+        0% on the class you care about; the threshold is a business decision about which error
+        hurts more.</p>
+      <span class="tag soon">Planned</span>
+    </div>
+
+    <div class="toy">
+      <h2>Data or Command?</h2>
+      <p class="kills">Kills: <b>&ldquo;a document is just data&rdquo;</b>. Drag one hidden sentence into a
+        document and watch the summary flip. Nothing on screen looked different.</p>
+      <span class="tag soon">Planned</span>
+    </div>
+
+    <div class="toy">
+      <h2>K-Anonymity</h2>
+      <p class="kills">Kills: <b>&ldquo;no names, so it&rsquo;s anonymous&rdquo;</b>. The nameless table opens at
+        k=1, and one row is uniquely the CFO. Coarsen the columns and watch them vanish into a crowd.</p>
+      <span class="tag soon">Planned</span>
+    </div>
+
+    <div class="toy">
+      <h2>Next Token</h2>
+      <p class="kills">Kills: <b>&ldquo;the model knows things&rdquo;</b>. Same prompt, two runs, two answers;
+        the wrong one was always sitting there with 12% of the mass. It weighs, it doesn&rsquo;t know.</p>
+      <span class="tag soon">Planned</span>
+    </div>
+
+    <div class="toy">
+      <h2>Overfit</h2>
+      <p class="kills">Kills: <b>&ldquo;higher training accuracy is better&rdquo;</b>. Drag complexity up:
+        train climbs to 100% while test falls. The model memorised the noise.</p>
+      <span class="tag soon">Planned</span>
+    </div>
+
+    <div class="toy">
+      <h2>Drift Compounds</h2>
+      <p class="kills">Kills: <b>&ldquo;95% per step is basically reliable&rdquo;</b>. Across a 12-step agent
+        workflow it&rsquo;s a coin flip. One well-placed checkpoint buys it back.</p>
+      <span class="tag soon">Planned</span>
+    </div>
+
+    <div class="toy">
+      <h2>Jevons Dial</h2>
+      <p class="kills">Kills: <b>&ldquo;more efficient means less used&rdquo;</b>. Drag the unit cost of AI
+        work down and watch total usage, spend, and energy rise.</p>
+      <span class="tag soon">Planned</span>
+    </div>
+
+    <div class="toy">
+      <h2>K-Means Stepper</h2>
+      <p class="kills">Kills: <b>&ldquo;the clusters are in the data&rdquo;</b>. Step the algorithm by hand;
+        two starts, two confident truths. A cluster is a choice until a human names it.</p>
+      <span class="tag soon">Planned</span>
+    </div>
+
+  </div>
+
+  <h3>House rules</h3>
+  <ul class="rules">
+    <li><b>One file.</b> No CDN, no fonts, no fetch; runs from a USB stick, uploads to an LMS as a single file.</li>
+    <li><b>One idea.</b> If it needs a tutorial, it&rsquo;s too big.</li>
+    <li><b>Ninety seconds.</b> Playable from cold by someone who read no instructions.</li>
+    <li><b>A &ldquo;wait, what?&rdquo; moment.</b> Named in every spec. If a build doesn&rsquo;t produce it, it isn&rsquo;t finished.</li>
+    <li><b>Nothing leaves the page.</b> No storage, no analytics, no backend; every &ldquo;model&rdquo; is a seeded simulation.</li>
+  </ul>
+
+  <footer>
+    Add <code>?present</code> to any toy to bump type sizes for a projector.<br>
+    MIT licensed · unit-agnostic teaching material · <a href="https://github.com/michael-borck/ai-toys">source</a>
+  </footer>
+
+</div>
+<script>
+if(new URLSearchParams(location.search).has("present")) document.body.classList.add("present");
+</script>
+</body>
+</html>
