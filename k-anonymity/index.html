@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K-Anonymity: no names in this table, and it still names people</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111a2e; --panel2:#0e1626; --line:#22304d;
+    --ink:#e6edf7; --muted:#93a4c3;
+    --accent:#fbbf24; --good:#34d399; --warn:#fbbf24; --bad:#f87171;
+    --fs:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(1200px 800px at 30% -10%, #16223c 0%, var(--bg) 55%);
+    color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:var(--fs); min-height:100vh; padding:20px clamp(14px,3vw,28px) 40px;
+  }
+  body.present{--fs:20px;}
+  header,main,footer{max-width:1080px; margin-left:auto; margin-right:auto;}
+  header{margin-bottom:16px;}
+  h1{font-size:1.45em; letter-spacing:.3px;}
+  h1 span{color:var(--accent);}
+  .sub{color:var(--muted); font-size:.85em; margin-top:6px; max-width:72ch; line-height:1.55;}
+  main{display:grid; gap:14px; grid-template-columns:minmax(0,1fr);}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px;}
+  h3{font-size:.72em; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted); margin-bottom:10px;}
+
+  /* ---- banner row ---- */
+  .topline{display:flex; gap:12px; align-items:stretch; flex-wrap:wrap;}
+  .badge{flex:0 0 auto; display:flex; align-items:center; gap:8px; padding:10px 14px;
+         border-radius:10px; font-weight:700; font-size:.85em;
+         background:#34d39922; color:var(--good); border:1px solid #34d39955;}
+  .kbox{flex:1 1 260px; display:flex; align-items:center; gap:14px; padding:8px 14px;
+        border-radius:10px; border:1px solid var(--line); background:var(--panel2);}
+  .kbox .kval{font-size:2em; font-weight:800;}
+  .kbox .kval.bad{color:var(--bad);} .kbox .kval.warn{color:var(--warn);} .kbox .kval.ok{color:var(--good);}
+  .kbox .kdesc{font-size:.78em; color:var(--muted); line-height:1.45;}
+  .kbox .kdesc b{color:var(--ink);}
+
+  /* ---- dials ---- */
+  .dials{display:grid; gap:10px 16px; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); margin-top:4px;}
+  .dial label{display:block; font-size:.72em; color:var(--muted); text-transform:uppercase;
+              letter-spacing:.8px; margin-bottom:4px;}
+  .dial input[type=range]{width:100%; accent-color:#fbbf24;}
+  .dial .rung{font-size:.76em; color:var(--ink); font-weight:600; margin-top:2px; min-height:1.3em;}
+  .presets{display:flex; gap:7px; flex-wrap:wrap; margin-top:12px;}
+  .preset{background:var(--panel2); border:1px solid var(--line); color:var(--muted);
+          border-radius:8px; padding:7px 11px; font-size:.75em; cursor:pointer; font-weight:600;}
+  .preset:hover{color:var(--ink); border-color:#3b82f6;}
+
+  /* ---- table ---- */
+  .tblwrap{overflow-x:auto; margin-top:4px;}
+  table{border-collapse:collapse; width:100%; font-size:.78em; min-width:640px;}
+  th{color:var(--muted); text-transform:uppercase; font-size:.82em; letter-spacing:.6px;
+     text-align:left; padding:7px 9px; border-bottom:1px solid var(--line);}
+  td{padding:6px 9px; border-bottom:1px solid #182339; line-height:1.4;
+     font-family:ui-monospace,SFMono-Regular,Menlo,monospace; cursor:pointer;}
+  td.issue{font-family:inherit; color:var(--muted); font-size:.92em; max-width:24ch;}
+  td.crowd{font-family:inherit; font-weight:700; font-size:.92em; white-space:nowrap;}
+  tr.single td{background:#f8717114;} tr.single td.crowd{color:var(--bad);}
+  tr.risky td{background:#fbbf240e;} tr.risky td.crowd{color:var(--warn);}
+  tr.crowded td.crowd{color:var(--good);}
+  tr[aria-selected=true] td{outline:1px solid #3b82f6; outline-offset:-1px;}
+  .tblnote{font-size:.72em; color:var(--muted); margin-top:8px; line-height:1.5;}
+
+  /* ---- readouts ---- */
+  .grid2{display:grid; gap:14px; grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+  @media (max-width:860px){ .grid2{grid-template-columns:minmax(0,1fr);} }
+  .snippet{background:#f7f5ef; color:#2a2a33; border-radius:10px; padding:12px 14px;
+           font-size:.82em; line-height:1.55; min-height:6.5em;}
+  .snippet .q{color:#6b21a8; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.9em;}
+  .snippet .hit{font-weight:800; color:#b91c1c;}
+  .snippet .hit.safe{color:#15803d;}
+  .snippet .ph{color:#8d876f;}
+  .facts{display:grid; gap:8px;}
+  .fact{display:flex; justify-content:space-between; gap:12px; font-size:.83em;
+        border-top:1px solid var(--line); padding-top:8px;}
+  .fact:first-child{border-top:0; padding-top:0;}
+  .fact span:first-child{color:var(--muted);}
+  .fact span:last-child{font-weight:700; text-align:right;}
+  .band{display:block; text-align:center; margin-top:12px; padding:9px 14px; border-radius:10px;
+        font-size:.82em; font-weight:700; letter-spacing:.3px; line-height:1.45;}
+  .band.bad{background:#f8717122; color:var(--bad); border:1px solid #f8717155;}
+  .band.warn{background:#fbbf2422; color:var(--warn); border:1px solid #fbbf2455;}
+  .band.ok{background:#34d39922; color:var(--good); border:1px solid #34d39955;}
+  .note{color:var(--muted); font-size:.8em; line-height:1.6;}
+  .note b{color:var(--ink); font-weight:600;}
+  footer{color:var(--muted); font-size:.74em; line-height:1.6; margin-top:18px;}
+  footer a{color:var(--muted);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>K-Anonymity: <span>no names in this table, and it still names people</span></h1>
+  <p class="sub">
+    Twenty support tickets, exported for analysis with every name stripped. Coarsen the columns
+    until each customer hides in a crowd of at least five, and watch what each turn of the dial
+    costs you in answers. k is the size of the smallest crowd; k = 1 is a person.
+  </p>
+</header>
+
+<main>
+
+  <section class="card">
+    <div class="topline">
+      <div class="badge">Names removed ✓</div>
+      <div class="kbox">
+        <span class="kval" id="kval">1</span>
+        <span class="kdesc" id="kdesc">–</span>
+      </div>
+    </div>
+    <div class="dials" id="dials" style="margin-top:12px"></div>
+    <div class="presets">
+      <button class="preset" type="button" id="p-raw">Back to raw (all exact)</button>
+      <button class="preset" type="button" id="p-bands">Bands, not deletions</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h3>The export · click a row to try to find them</h3>
+    <div class="tblwrap">
+      <table id="tbl" aria-label="de-identified support tickets">
+        <thead><tr>
+          <th>#</th><th>Age</th><th>Role</th><th>City</th><th>Industry</th><th>Revenue</th>
+          <th>Issue (free text, never generalised)</th><th>Crowd</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <p class="tblnote">The Issue column travels with every export and no dial touches it. One of
+    these tickets undoes a dial all by itself; find it.</p>
+  </section>
+
+  <section class="card">
+    <div class="grid2">
+      <div>
+        <h3>The linkage attack · one search away</h3>
+        <div class="snippet" id="snippet"><span class="ph">Click a row above. This box shows what
+        someone with a search engine and LinkedIn could do with it.</span></div>
+      </div>
+      <div>
+        <h3>What the table can still tell you</h3>
+        <div class="facts">
+          <div class="fact"><span>Distinct groups the analyst can still see</span><span id="util">–</span></div>
+          <div class="fact"><span>"Which city should get the new support hub?"</span><span id="q1">–</span></div>
+          <div class="fact"><span>Customers singled out (crowd of 1)</span><span id="singles">–</span></div>
+        </div>
+        <div class="band" id="verdict" role="status" aria-live="polite">–</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <p class="note" style="margin:0">
+      <b>"De-identified" and "anonymised" are different claims.</b> Removing names removes one
+      column; identity lives in the combination of the ordinary ones, which is why the raw export
+      opens with seven customers in crowds of one. Anonymity here is bought with precision, and
+      the analyst who turns the dials is choosing which business questions die: that trade is the
+      job, not a side effect. And k-anonymity is a floor, not a guarantee: everyone in a crowd can
+      still share the thing you wanted hidden, outside data can shrink a crowd, and free text
+      leaks around every dial you own.
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  All twenty tickets are fictional; any resemblance to a real CFO in Karratha is the lesson, not a
+  person. Deterministic: same table every load. Runs entirely in your browser: no network, no
+  storage, no analytics. Part of <a href="../">ai-toys</a>.
+</footer>
+
+<script>
+"use strict";
+
+/* 20 fixed rows: [age, role, city, industry, revenue $M, issue]. Frozen; see SPEC. */
+const ROWS = [
+  [51,"CFO","Karratha","Mining",48,"Billing split across site offices"],
+  [54,"Finance Manager","Perth","Mining",20,"Invoice portal timeout at month-end"],
+  [54,"Finance Manager","Perth","Mining",20,"Duplicate charges on renewal"],
+  [57,"Financial Controller","Perth","Oil & Gas",35,"VPN dropouts at our Karratha site office"],
+  [50,"Head of Finance","Geraldton","Mining",15,"Export fails for BAS reporting"],
+  [29,"IT Manager","Sydney","Software",5,"SSO loop after password reset"],
+  [29,"IT Manager","Sydney","Software",5,"API rate limits too low for CI"],
+  [29,"IT Manager","Sydney","Software",5,"Webhook retries flooding logs"],
+  [28,"Systems Admin","Newcastle","Consulting",3,"Backup agent pegging CPU"],
+  [26,"DevOps Lead","Sydney","Software",8,"Staging environment quota exceeded"],
+  [41,"Operations Manager","Melbourne","Supermarkets",9,"Roster sync dropping night shifts"],
+  [41,"Operations Manager","Melbourne","Supermarkets",9,"Stock alerts arriving hours late"],
+  [42,"Logistics Manager","Geelong","Fashion",4,"Label printer driver conflict"],
+  [42,"Logistics Manager","Geelong","Fashion",4,"Freight API returning stale quotes"],
+  [40,"Warehouse Lead","Melbourne","Homewares",2,"Scanner app crashes on Android 14"],
+  [61,"CEO","Brisbane","Logistics",60,"Board dashboard shows last quarter"],
+  [61,"CEO","Brisbane","Logistics",60,"Exec summary email going to spam"],
+  [64,"Managing Director","Cairns","Tourism",75,"Seasonal licences not scaling down"],
+  [63,"COO","Gold Coast","Logistics",90,"Fleet telemetry gaps overnight"],
+  [63,"COO","Gold Coast","Logistics",90,"Depot wifi handoff drops sessions"]
+];
+
+const STATE_OF = {Karratha:"WA",Perth:"WA",Geraldton:"WA",Sydney:"NSW",Newcastle:"NSW",
+  Melbourne:"VIC",Geelong:"VIC",Brisbane:"QLD",Cairns:"QLD","Gold Coast":"QLD"};
+const FUNC_OF = {CFO:"Finance","Finance Manager":"Finance","Financial Controller":"Finance",
+  "Head of Finance":"Finance","IT Manager":"IT","Systems Admin":"IT","DevOps Lead":"IT",
+  "Operations Manager":"Operations","Logistics Manager":"Operations","Warehouse Lead":"Operations",
+  CEO:"Executive","Managing Director":"Executive",COO:"Executive"};
+const SECTOR_OF = {Mining:"Resources","Oil & Gas":"Resources",Software:"Services",
+  Consulting:"Services",Tourism:"Services",Logistics:"Services",
+  Supermarkets:"Retail",Fashion:"Retail",Homewares:"Retail"};
+
+/* Generalisation ladders: functions from raw value to displayed value, per rung. */
+const DIALS = [
+  {key:"age", label:"Age", rungs:["exact","5-year band","10-year band","suppressed"],
+   fn:[a=>String(a), a=>(Math.floor(a/5)*5)+"-"+(Math.floor(a/5)*5+4),
+       a=>(Math.floor(a/10)*10)+"-"+(Math.floor(a/10)*10+9), ()=>"–"]},
+  {key:"role", label:"Role", rungs:["exact","function","suppressed"],
+   fn:[r=>r, r=>FUNC_OF[r], ()=>"–"]},
+  {key:"city", label:"City", rungs:["exact","state","suppressed"],
+   fn:[c=>c, c=>STATE_OF[c], ()=>"–"]},
+  {key:"industry", label:"Industry", rungs:["exact","sector","suppressed"],
+   fn:[i=>i, i=>SECTOR_OF[i], ()=>"–"]},
+  {key:"revenue", label:"Revenue", rungs:["exact","band","suppressed"],
+   fn:[v=>"$"+v+"M", v=>v<10?"$1-10M":v<50?"$10-50M":"$50M+", ()=>"–"]}
+];
+
+const state = {rungs:[0,0,0,0,0], sel:null};
+const $ = id => document.getElementById(id);
+
+/* ---- dials ---- */
+DIALS.forEach((d,i) => {
+  const w = document.createElement("div"); w.className = "dial";
+  w.innerHTML = '<label for="d'+i+'">'+d.label+'</label>' +
+    '<input type="range" id="d'+i+'" min="0" max="'+(d.rungs.length-1)+'" value="0" step="1">' +
+    '<div class="rung" id="r'+i+'"></div>';
+  $("dials").appendChild(w);
+  w.querySelector("input").addEventListener("input", e => {
+    state.rungs[i] = +e.target.value; render();
+  });
+});
+$("p-raw").addEventListener("click", () => { setRungs([0,0,0,0,0]); });
+$("p-bands").addEventListener("click", () => { setRungs([2,1,1,1,1]); });
+function setRungs(r){
+  state.rungs = r.slice();
+  r.forEach((v,i) => $("d"+i).value = v);
+  render();
+}
+
+/* ---- table scaffolding ---- */
+const trEls = ROWS.map((row,idx) => {
+  const tr = document.createElement("tr");
+  tr.tabIndex = 0; tr.setAttribute("role","button");
+  tr.innerHTML = "<td>"+(idx+1)+"</td>" + "<td></td>".repeat(5) +
+                 '<td class="issue">'+row[5]+'</td><td class="crowd"></td>';
+  tr.addEventListener("click", () => { state.sel = idx; render(); });
+  tr.addEventListener("keydown", e => {
+    if(e.key === "Enter" || e.key === " "){ e.preventDefault(); state.sel = idx; render(); }
+  });
+  $("tbody").appendChild(tr); return tr;
+});
+
+function displayed(idx){
+  const [age,role,city,ind,rev] = ROWS[idx];
+  const raw = [age,role,city,ind,rev];
+  return DIALS.map((d,i) => d.fn[state.rungs[i]](raw[i]));
+}
+
+function render(){
+  DIALS.forEach((d,i) => $("r"+i).textContent = d.rungs[state.rungs[i]]);
+
+  // equivalence classes over displayed tuples
+  const tuples = ROWS.map((_,idx) => displayed(idx));
+  const count = new Map();
+  tuples.forEach(t => { const k = t.join("|"); count.set(k, (count.get(k)||0)+1); });
+  const sizes = tuples.map(t => count.get(t.join("|")));
+  const k = Math.min(...sizes);
+  const singles = sizes.filter(s => s === 1).length;
+
+  trEls.forEach((tr,idx) => {
+    const cells = tr.querySelectorAll("td");
+    tuples[idx].forEach((v,i) => cells[i+1].textContent = v);
+    const s = sizes[idx];
+    tr.className = s === 1 ? "single" : s < 5 ? "risky" : "crowded";
+    cells[7].textContent = s === 1 ? "1 · SINGLED OUT" : s < 5 ? s+" · AT RISK" : s+" · IN A CROWD";
+    tr.setAttribute("aria-selected", String(state.sel === idx));
+  });
+
+  const kv = $("kval");
+  kv.textContent = k;
+  kv.className = "kval " + (k === 1 ? "bad" : k < 5 ? "warn" : "ok");
+  $("kdesc").innerHTML = k === 1
+    ? "<b>k = 1.</b> " + singles + " customer" + (singles>1?"s are":" is") + " unique in this table: no crowd, just a description."
+    : k < 5 ? "<b>k = " + k + ".</b> The smallest crowd holds " + k + " people. Closer, not there."
+    : "<b>k = " + k + ".</b> Every customer shares their row-shape with at least " + (k-1) + " others.";
+
+  // utility + question card
+  $("util").textContent = count.size + " of 20";
+  const cityRung = state.rungs[2];
+  const cityCounts = {};
+  ROWS.forEach(r => cityCounts[r[2]] = (cityCounts[r[2]]||0)+1);
+  const multi = Object.entries(cityCounts).filter(([,n]) => n >= 2);
+  const answerable = cityRung === 0 && multi.length >= 2;
+  if(answerable){
+    const top = Object.entries(cityCounts).sort((a,b)=>b[1]-a[1])[0];
+    $("q1").textContent = "ANSWERABLE: " + top[0] + " (" + top[1] + " tickets)";
+  } else {
+    $("q1").textContent = "UNANSWERABLE" + (cityRung > 0 ? ": city is gone" : "");
+  }
+  $("singles").textContent = singles === 0 ? "none" : singles + " of 20";
+
+  // verdict
+  const v = $("verdict");
+  if(k === 1){
+    v.className = "band bad";
+    v.textContent = "Nameless is not anonymous: " + singles + " customers are one search away.";
+  } else if(k < 5){
+    v.className = "band warn";
+    v.textContent = "k = " + k + ". Better. The smallest crowds are still small enough to gossip about.";
+  } else {
+    v.className = "band ok";
+    v.textContent = "k = " + k + ": everyone hides in a crowd of " + k +
+      ". Look right: this is what it cost in answers.";
+  }
+
+  // linkage snippet
+  const sn = $("snippet");
+  if(state.sel === null){
+    sn.innerHTML = '<span class="ph">Click a row above. This box shows what someone with a search engine and LinkedIn could do with it.</span>';
+  } else {
+    const t = tuples[state.sel].filter(x => x !== "–");
+    const s = sizes[state.sel];
+    const precise = state.rungs.reduce((a,b)=>a+b,0) === 0;
+    const scale = s === 1 ? (precise
+        ? '<span class="hit">matches exactly one plausible person.</span> You just named them.'
+        : '<span class="hit">still narrows to one person in this table.</span> Coarser, not safer, yet.')
+      : s < 5 ? '<span class="hit">narrows to about ' + s + ' people.</span> Small enough to ask around.'
+      : '<span class="hit safe">matches ' + s + ' people here, and thousands outside.</span> A crowd.';
+    sn.innerHTML = 'Searching public sources for: <span class="q">' + t.join(" · ") +
+                   '</span><br>Ticket #' + (state.sel+1) + " " + scale;
+  }
+}
+
+if(new URLSearchParams(location.search).has("present")) document.body.classList.add("present");
+render();
+</script>
+</body>
+</html>

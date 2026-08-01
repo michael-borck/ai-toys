@@ -14,9 +14,9 @@ in an offline lab, from a USB stick, or uploaded to an LMS as a single file. Any
 
 | Toy | Kills | Status |
 |---|---|---|
-| **[Threshold Dial](threshold-dial/)** | "overall accuracy means it works": a headline 85% can hide 0% on the class you care about, and the threshold is a business decision about which error hurts more | 📋 planned |
-| **[Data or Command?](data-or-command/)** | "a document is just data": drag one hidden sentence into a document and watch the summary flip | 📋 planned |
-| **[K-Anonymity](k-anonymity/)** | "there are no names, so it's anonymous": the nameless table opens at k=1 and one row is uniquely the CFO | 📋 planned |
+| **[Threshold Dial](threshold-dial/)** | "overall accuracy means it works": the prettiest headline ships 29 of 50 faults, and a detector that detects nothing scores 95% | ✅ ready |
+| **[Data or Command?](data-or-command/)** | "a document is just data": drag one hidden sentence into a document and watch the summary flip | ✅ ready |
+| **[K-Anonymity](k-anonymity/)** | "there are no names, so it's anonymous": the nameless table opens at k=1 and one row is uniquely the CFO | ✅ ready |
 | **[Next Token](next-token/)** | "the model knows things": same prompt, two runs, two answers; the model weighs, it does not know | 📋 planned |
 | **[Overfit](overfit/)** | "higher training accuracy means a better model": train climbs to 100% while test falls | 📋 planned |
 | **[Drift Compounds](drift-compounds/)** | "95% reliable per step is basically reliable": over 12 steps it is a coin flip | 📋 planned |
