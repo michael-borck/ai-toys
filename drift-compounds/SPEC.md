@@ -20,15 +20,15 @@ where, decides what gets caught.
 
 Two secondary beats, in order:
 
-1. *Buy a better model*: drag to **99%**. Still only **89 of 100**. Even the slider's maximum,
+1. *Buy a better model*: drag to **99%**. Still only **90 of 100**. Even the slider's maximum,
    99.9%, leaks one. The exponent beats the base.
 2. *Design the checkpoints*: each checkpoint a student places shows a **coverage bracket over
    the previous three steps**: a human can meaningfully verify recent work, but drift older than
-   that has been built upon and reads as foundation, not error. One checkpoint lifts 54 to
-   **63**. The student who tries the obvious dodge, one big review at the end, gets the same 63,
-   with the bracket showing steps 1–9 uncovered: that is "I review everything" seen honestly.
-   Covering the whole rail takes a checkpoint every three steps: **100 of 100 correct**, at the
-   cost of 400 reviews and a card that admits the flattery (§5).
+   that has been built upon and reads as foundation, not error. One checkpoint lifts 54 to the
+   mid-60s (65 observed). The student who tries the obvious dodge, one big review at the end,
+   does no better (64), with the bracket showing steps 1–9 bare: that is "I review everything"
+   seen honestly. Covering the whole rail takes a checkpoint every three steps: **100 of 100
+   correct**, at the cost of 400 reviews and a card that admits the flattery (§5).
 
 ## 2. Screen layout
 
@@ -58,8 +58,8 @@ load-bearing: that is a rubber stamp wearing diligence's clothes.*
 ## 3. The model and the data
 
 - Each bead × step is a Bernoulli trial at reliability `p`, drawn from seeded mulberry32
-  (**seed 29**, one stream, bead-major order). The same 100 trajectories replay identically for
-  a given slider stop, so every reachable configuration repeats on the projector.
+  (**seed 7**, one stream per slider stop, bead-major order). The same 100 trajectories replay
+  identically for a given slider stop, so every reachable configuration repeats on the projector.
 - A bead is **wrong** from its first failed step onward (drift, not crash); later successful
   steps never heal it.
 - **Verification horizon**: a checkpoint placed after step `c` catches (and fixes) a wrong bead
@@ -73,15 +73,15 @@ load-bearing: that is a rubber stamp wearing diligence's clothes.*
 
 ## 4. Derived numbers
 
-Verify at build that seed 29 lands within ±3 of expectation at each spotlight setting; else
-reseed and freeze the seed that does:
+Verified for seed 7 (all within ±3 of expectation; rebuilds must reproduce the observed column):
 
-| Setting | Expectation of 100 | Spotlight |
-|---|---|---|
-| p=95%, no checkpoints | 0.95¹² ≈ 54 | the moment |
-| p=99%, no checkpoints | 0.99¹² ≈ 89 | better model, still leaking |
-| p=95%, one checkpoint after 12 | 0.95⁹ ≈ 63 | end review = rubber stamp |
-| p=95%, checkpoints after 3, 6, 9, 12 | 100 | coverage, at 400 reviews |
+| Setting | Expectation of 100 | Observed (seed 7) | Spotlight |
+|---|---|---|---|
+| p=95%, no checkpoints | 0.95¹² ≈ 54 | **54** | the moment |
+| p=99%, no checkpoints | 0.99¹² ≈ 89 | 90 | better model, still leaking |
+| p=95%, one checkpoint after 12 | 0.95⁹ ≈ 63 | 64 | end review = rubber stamp |
+| p=95%, one checkpoint after 6 | 0.95⁹ ≈ 63 | 65 | mid checkpoint, same coverage |
+| p=95%, checkpoints after 3, 6, 9, 12 | 100 | 100 | coverage, at 400 reviews |
 
 - Review-cost line: `reviews = 100 × checkpoints placed`, against the labelled alternative
   "verify every step of every run: 1,200".

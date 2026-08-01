@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Next Token: it weighs, it does not know</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111a2e; --panel2:#0e1626; --line:#22304d;
+    --ink:#e6edf7; --muted:#93a4c3;
+    --accent:#fbbf24; --good:#34d399; --warn:#fbbf24; --bad:#f87171;
+    --system:#a78bfa;
+    --fs:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(1200px 800px at 30% -10%, #16223c 0%, var(--bg) 55%);
+    color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:var(--fs); min-height:100vh; padding:20px clamp(14px,3vw,28px) 40px;
+  }
+  body.present{--fs:20px;}
+  header,main,footer{max-width:880px; margin-left:auto; margin-right:auto;}
+  header{margin-bottom:16px;}
+  h1{font-size:1.45em; letter-spacing:.3px;}
+  h1 span{color:var(--accent);}
+  .sub{color:var(--muted); font-size:.85em; margin-top:6px; max-width:72ch; line-height:1.55;}
+  main{display:grid; gap:14px;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px;}
+  h3{font-size:.72em; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted); margin-bottom:10px;}
+
+  .tabs{display:flex; gap:7px; flex-wrap:wrap; margin-bottom:12px;}
+  .tab{background:var(--panel2); border:1px solid var(--line); color:var(--muted);
+       border-radius:8px; padding:7px 11px; font-size:.75em; cursor:pointer; font-weight:600;}
+  .tab:hover{color:var(--ink);}
+  .tab[aria-pressed=true]{color:var(--ink); border-color:#3b82f6;
+    background:linear-gradient(180deg,#1a2a4a,#12203d); box-shadow:0 0 0 1px #3b82f655;}
+  .sentence{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.95em;
+            background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+            padding:12px 14px; line-height:1.6; min-height:3.2em;}
+  .sentence .new{color:var(--accent); font-weight:700;}
+  .sentence .cursor{color:var(--muted); animation:blink 1.1s steps(1) infinite;}
+  @keyframes blink{50%{opacity:0;}}
+  @media (prefers-reduced-motion: reduce){ .sentence .cursor{animation:none;} }
+
+  .dist{margin-top:4px;}
+  .brow{display:flex; align-items:center; gap:10px; margin:5px 0;}
+  .brow .tok{flex:0 0 9.5em; text-align:right; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+             font-size:.8em; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .brow .bar{flex:1; height:1.15em; background:var(--panel2); border-radius:5px; position:relative; overflow:visible;}
+  .brow .bar i{display:block; height:100%; background:var(--system); opacity:.8; border-radius:5px;
+               transition:width .18s ease; min-width:2px;}
+  .brow.sampled .bar i{outline:2px solid var(--accent); outline-offset:1px; opacity:1;}
+  .brow .pc{flex:0 0 6.6em; font-size:.74em; color:var(--muted); white-space:nowrap;}
+  .brow.sampled .pc{color:var(--accent); font-weight:700;}
+
+  .ctl{margin-top:14px;}
+  .ctl label{display:flex; justify-content:space-between; font-size:.78em; color:var(--muted); margin-bottom:7px;}
+  .ctl label b{color:var(--accent); font-size:1.1em;}
+  input[type=range]{width:100%; accent-color:#fbbf24;}
+  .zones{display:flex; justify-content:space-between; font-size:.68em; color:var(--muted); margin-top:4px;}
+  .row{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;}
+  .btn{background:var(--panel2); border:1px solid var(--line); color:var(--ink);
+       border-radius:10px; padding:9px 14px; font-size:.82em; cursor:pointer; font-weight:700;}
+  .btn:hover{border-color:#3b82f6;}
+  .btn.primary{border-color:#fbbf2466; color:var(--accent);}
+  .btn:disabled{opacity:.4; cursor:default;}
+  .band{display:block; text-align:center; margin-top:12px; padding:9px 14px; border-radius:10px;
+        font-size:.82em; font-weight:700; letter-spacing:.3px; line-height:1.45;}
+  .band.bad{background:#f8717122; color:var(--bad); border:1px solid #f8717155;}
+  .band.warn{background:#fbbf2422; color:var(--warn); border:1px solid #fbbf2455;}
+  .band.ok{background:#34d39922; color:var(--good); border:1px solid #34d39955;}
+  .note{color:var(--muted); font-size:.8em; line-height:1.6;}
+  .note b{color:var(--ink); font-weight:600;}
+  footer{color:var(--muted); font-size:.74em; line-height:1.6; margin-top:18px;}
+  footer a{color:var(--muted);}
+  footer .always{color:var(--ink); font-weight:600;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Next Token: <span>it weighs, it does not know</span></h1>
+  <p class="sub">
+    A language model finishes your sentence by scoring every candidate next token, then rolling
+    dice over the scores. That is the whole trick, repeated thousands of times per answer. Pick a
+    prompt, watch the weights, roll the dice twice.
+  </p>
+</header>
+
+<main>
+
+  <section class="card">
+    <h3>The prompt</h3>
+    <div class="tabs" id="tabs"></div>
+    <div class="sentence" id="sentence" aria-live="off"></div>
+    <div class="row">
+      <button class="btn primary" type="button" id="sample">Sample the next token</button>
+      <button class="btn" type="button" id="again">Run again</button>
+    </div>
+    <div class="ctl">
+      <label for="temp"><span>Temperature (reshapes the weights before the dice roll)</span>
+        <b id="tval">1.00</b></label>
+      <input type="range" id="temp" min="0" max="2" value="1" step="0.05">
+      <div class="zones"><span>0 · deterministic</span><span>1 · balanced</span><span>2 · adventurous</span></div>
+    </div>
+    <div class="band" id="verdict" role="status" aria-live="polite">Press Sample. The tallest bar is favourite, not certain.</div>
+  </section>
+
+  <section class="card">
+    <h3>What the model is weighing right now</h3>
+    <div class="dist" id="dist"></div>
+  </section>
+
+  <section class="card">
+    <p class="note" style="margin:0">
+      <b>The model always does exactly this.</b> A peaked distribution ("2 + 2 =") is what feeling
+      certain looks like; a flat one ("the best programming language") is what opinion looks like;
+      and the revenue prompt shows a third case, a smooth confident spread over numbers with no
+      ground truth anywhere in it. That last one is "hallucination": not a malfunction, just
+      sampling working as designed on a question the weights never contained. Confidence in the
+      prose is a property of the sampling, not of the truth, which is why you verify load-bearing
+      claims, and why your classmate's identical prompt gets a different answer.
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  <span class="always">No AI runs on this page. The distributions are hand-written and
+  illustrative; the dice are seeded so every class sees the same rolls.</span> Runs entirely in
+  your browser: no network, no storage, no analytics. Part of <a href="../">ai-toys</a>.
+</footer>
+
+<script>
+"use strict";
+
+/* Hand-authored distributions. Weights sum to 1 per table; logits = ln(weight), so the chart at
+   T=1 shows the weights themselves and temperature reshapes them honestly via softmax. */
+const PROMPTS = [
+  {label:"Capital of Australia", prompt:"The capital of Australia is", seed:26, start:"d0",
+   dists:{d0:[["Canberra.",.62],["Sydney.",.24],["Melbourne.",.09],["Perth.",.02],
+              ["Brisbane.",.012],["Adelaide.",.008],["the",.005],["a",.005]]}},
+  {label:"2 + 2 =", prompt:"2 + 2 =", seed:40, start:"d0",
+   dists:{d0:[["4",.97],["5",.008],["3",.006],["22",.006],["four",.004],["2",.003],["…",.003]]}},
+  {label:"Revenue grew by…", prompt:"Last quarter our revenue grew by", seed:41, start:"d0",
+   dists:{d0:[["8%",.18,"d1"],["12%",.17,"d1"],["15%",.15,"d1"],["10%",.14,"d1"],
+              ["6%",.12,"d1"],["20%",.10,"d1"],["3%",.08,"d1"],["40%",.06,"d1"]],
+          d1:[[", driven by cloud demand.",.34],[", led by new enterprise accounts.",.27],
+              [", thanks to seasonal uplift.",.21],[", according to preliminary figures.",.18]]}},
+  {label:"Best language", prompt:"The best programming language is", seed:42, start:"d0",
+   dists:{d0:[["Python",.22,"d1"],["JavaScript",.16,"d1"],["Rust",.13,"d1"],["Go",.11,"d1"],
+              ["TypeScript",.10,"d1"],["C",.08,"d1"],["Java",.08,"d1"],["Excel",.06,"d1"],
+              ["COBOL",.03,"d1"],["whichever ships",.03,"d1"]],
+          d1:[["because it is readable.",.30],["for its ecosystem.",.25],
+              ["if you value speed.",.25],["and always was.",.20]]}},
+  {label:"Opposite of up", prompt:"The opposite of up is", seed:43, start:"d0",
+   dists:{d0:[["down.",.91],["over.",.02],["gravity.",.02],["sideways.",.02],
+              ["up.",.01],["a lie.",.01],["north.",.01]]}}
+];
+
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+/* One stream per prompt: visiting other prompts never disturbs this one's sequence. */
+const streams = PROMPTS.map(p => mulberry32(p.seed));
+
+const state = {p:0, dist:"d0", tokens:[], T:1, done:false, last:null};
+const $ = id => document.getElementById(id);
+
+PROMPTS.forEach((p,i) => {
+  const b = document.createElement("button");
+  b.className = "tab"; b.type = "button"; b.textContent = p.label;
+  b.addEventListener("click", () => {
+    state.p = i; state.dist = PROMPTS[i].start; state.tokens = []; state.done = false; state.last = null;
+    render();
+  });
+  $("tabs").appendChild(b);
+});
+
+function probs(){
+  const rows = PROMPTS[state.p].dists[state.dist];
+  const logits = rows.map(r => Math.log(r[1]));
+  const T = Math.max(state.T, 0.0001);
+  if(state.T < 0.05){                      // argmax zone, labelled deterministic
+    const m = logits.indexOf(Math.max(...logits));
+    return rows.map((r,i) => ({t:r[0], next:r[2], p:i===m?1:0}));
+  }
+  const e = logits.map(l => Math.exp(l/T)), s = e.reduce((a,b)=>a+b,0);
+  return rows.map((r,i) => ({t:r[0], next:r[2], p:e[i]/s}));
+}
+
+function appendToken(tok){
+  return /^[,.;:!?%…]/.test(tok) ? tok : " " + tok;
+}
+
+function render(){
+  const P = PROMPTS[state.p];
+  document.querySelectorAll("#tabs .tab").forEach((b,i) =>
+    b.setAttribute("aria-pressed", String(i === state.p)));
+  $("tval").textContent = state.T.toFixed(2);
+
+  let s = P.prompt;
+  state.tokens.forEach((tok,i) => {
+    const cls = (i === state.tokens.length-1) ? "new" : "";
+    s += '<span class="'+cls+'">' + appendToken(tok) + "</span>";
+  });
+  if(!state.done) s += ' <span class="cursor">▊</span>';
+  $("sentence").innerHTML = s;
+
+  const pr = probs();
+  const sorted = pr.map((r,i)=>({...r,i})).sort((a,b)=>b.p-a.p);
+  const dist = $("dist");
+  dist.innerHTML = "";
+  sorted.forEach(r => {
+    const row = document.createElement("div");
+    const sampledHere = state.last !== null && state.last.dist === state.dist && state.last.i === r.i && state.last.p === state.p;
+    row.className = "brow" + (sampledHere ? " sampled" : "");
+    row.innerHTML = '<span class="tok">'+r.t+'</span>' +
+      '<span class="bar"><i style="width:'+(r.p*100).toFixed(2)+'%"></i></span>' +
+      '<span class="pc">'+(r.p*100).toFixed(1)+'%'+(sampledHere?' · SAMPLED':'')+'</span>';
+    dist.appendChild(row);
+  });
+
+  $("sample").disabled = state.done;
+  $("sample").textContent = state.done ? "Sentence finished" : "Sample the next token";
+}
+
+$("sample").addEventListener("click", () => {
+  if(state.done) return;
+  const pr = probs();
+  const u = streams[state.p]();            // one draw per Sample, at every temperature
+  let acc = 0, pick = pr.length - 1;
+  for(let i=0;i<pr.length;i++){ acc += pr[i].p; if(u < acc){ pick = i; break; } }
+  const r = pr[pick];
+  const rank = pr.map((x,i)=>({p:x.p,i})).sort((a,b)=>b.p-a.p).findIndex(x=>x.i===pick) + 1;
+  state.tokens.push(r.t);
+  state.last = {p:state.p, dist:state.dist, i:pick};
+  const v = $("verdict");
+  const ordinal = ["","most likely","2nd most likely","3rd most likely","4th most likely"][rank] || rank+"th most likely";
+  if(rank === 1){
+    v.className = "band ok";
+    v.textContent = "Sampled “" + r.t + "”: the favourite, at " + (r.p*100).toFixed(1) +
+      "%. Favourites usually win. Usually.";
+  } else {
+    v.className = "band bad";
+    v.textContent = "Sampled “" + r.t + "”: the " + ordinal + ", at " + (r.p*100).toFixed(1) +
+      "%. A " + (r.p*100).toFixed(0) + "% chance lands about one time in " + Math.max(2,Math.round(1/Math.max(r.p,.01))) +
+      ". The bars never moved; the dice did.";
+  }
+  if(r.next){ state.dist = r.next; } else { state.done = true; }
+  render();
+});
+
+$("again").addEventListener("click", () => {
+  /* Clears the sentence and CONTINUES this prompt's stream: run 2's first draw is the stream's
+     next value, which is what makes run 2 differ from run 1, deterministically. */
+  state.dist = PROMPTS[state.p].start; state.tokens = []; state.done = false; state.last = null;
+  $("verdict").className = "band warn";
+  $("verdict").textContent = "Same prompt, same bars, fresh roll. Sample again.";
+  render();
+});
+
+$("temp").addEventListener("input", e => { state.T = +e.target.value; render(); });
+if(new URLSearchParams(location.search).has("present")) document.body.classList.add("present");
+render();
+</script>
+</body>
+</html>

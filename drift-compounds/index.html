@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drift Compounds: twelve A-grades make a coin flip</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111a2e; --panel2:#0e1626; --line:#22304d;
+    --ink:#e6edf7; --muted:#93a4c3;
+    --accent:#fbbf24; --good:#34d399; --warn:#fbbf24; --bad:#f87171;
+    --user:#2dd4bf;
+    --fs:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(1200px 800px at 30% -10%, #16223c 0%, var(--bg) 55%);
+    color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:var(--fs); min-height:100vh; padding:20px clamp(14px,3vw,28px) 40px;
+  }
+  body.present{--fs:20px;}
+  header,main,footer{max-width:1080px; margin-left:auto; margin-right:auto;}
+  header{margin-bottom:16px;}
+  h1{font-size:1.45em; letter-spacing:.3px;}
+  h1 span{color:var(--accent);}
+  .sub{color:var(--muted); font-size:.85em; margin-top:6px; max-width:72ch; line-height:1.55;}
+  main{display:grid; gap:14px;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px;}
+  h3{font-size:.72em; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted); margin-bottom:10px;}
+
+  /* ---- pipeline rail ---- */
+  .rail{display:flex; align-items:flex-start; flex-wrap:wrap; gap:2px 0; margin:4px 0 2px;}
+  .step{flex:1 1 0; min-width:64px; text-align:center; position:relative; padding-top:26px;}
+  .step .box{border:1px solid var(--line); background:var(--panel2); border-radius:8px;
+             padding:7px 4px; font-size:.66em; color:var(--ink); line-height:1.25; min-height:3.4em;
+             display:flex; align-items:center; justify-content:center;}
+  .step .num{position:absolute; top:26px; left:4px; font-size:.6em; color:var(--muted);}
+  .step.active .box{border-color:var(--accent); box-shadow:0 0 0 1px #fbbf2444;}
+  .step .cover{position:absolute; top:10px; left:2px; right:2px; height:9px;
+               border:2px solid var(--user); border-bottom:0; border-radius:6px 6px 0 0; display:none;}
+  .step.covered .cover{display:block;}
+  .gap{flex:0 0 auto; width:22px; position:relative; padding-top:26px; display:flex; justify-content:center;}
+  .gap button{width:20px; height:38px; border-radius:7px; border:1px dashed var(--line);
+              background:none; color:var(--muted); cursor:pointer; font-size:.72em; line-height:1;}
+  .gap button:hover{border-color:var(--user); color:var(--user);}
+  .gap button[aria-pressed=true]{border:2px solid var(--user); color:var(--user); background:#2dd4bf18;
+                                 font-weight:800;}
+  .raillegend{font-size:.7em; color:var(--muted); margin-top:8px; line-height:1.5;}
+  .raillegend b{color:var(--user); font-weight:700;}
+
+  /* ---- controls ---- */
+  .ctl{margin-top:4px;}
+  .ctl label{display:flex; justify-content:space-between; font-size:.78em; color:var(--muted); margin-bottom:7px;}
+  .ctl label b{color:var(--accent); font-size:1.15em;}
+  input[type=range]{width:100%; accent-color:#fbbf24;}
+  .row{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;}
+  .btn{background:var(--panel2); border:1px solid var(--line); color:var(--ink);
+       border-radius:10px; padding:9px 14px; font-size:.82em; cursor:pointer; font-weight:700;}
+  .btn:hover{border-color:#3b82f6;}
+  .btn.primary{border-color:#fbbf2466; color:var(--accent);}
+  .btn:disabled{opacity:.4; cursor:default;}
+
+  /* ---- beads + tally ---- */
+  .grid2{display:grid; gap:14px; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);}
+  @media (max-width:860px){ .grid2{grid-template-columns:minmax(0,1fr);} }
+  .beads{display:grid; grid-template-columns:repeat(20,1fr); gap:3px; margin-top:4px;}
+  .bead{aspect-ratio:1; border-radius:3px; background:#2a3550;}
+  .bead.ok{background:var(--good);}
+  .bead.wrong{background:var(--warn);
+    background-image:repeating-linear-gradient(45deg, transparent 0 2px, #00000055 2px 4px);}
+  .pair{display:flex; gap:10px; margin-top:12px;}
+  .score{flex:1; border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--panel2);}
+  .score .n{font-size:1.6em; font-weight:800;}
+  .score .w{font-size:.68em; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; margin-top:2px;}
+  .score.good .n{color:var(--good);}
+  .score.badn .n{color:var(--warn);}
+  .facts{display:grid; gap:8px; margin-top:12px;}
+  .fact{display:flex; justify-content:space-between; gap:12px; font-size:.8em;
+        border-top:1px solid var(--line); padding-top:8px;}
+  .fact:first-child{border-top:0; padding-top:0;}
+  .fact span:first-child{color:var(--muted);}
+  .fact span:last-child{font-weight:700; text-align:right;
+        font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.95em;}
+  .band{display:block; text-align:center; margin-top:12px; padding:9px 14px; border-radius:10px;
+        font-size:.82em; font-weight:700; letter-spacing:.3px; line-height:1.45;}
+  .band.bad{background:#f8717122; color:var(--bad); border:1px solid #f8717155;}
+  .band.warn{background:#fbbf2422; color:var(--warn); border:1px solid #fbbf2455;}
+  .band.ok{background:#34d39922; color:var(--good); border:1px solid #34d39955;}
+  .note{color:var(--muted); font-size:.8em; line-height:1.6;}
+  .note b{color:var(--ink); font-weight:600;}
+  footer{color:var(--muted); font-size:.74em; line-height:1.6; margin-top:18px;}
+  footer a{color:var(--muted);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Drift Compounds: <span>twelve A-grades make a coin flip</span></h1>
+  <p class="sub">
+    An agent runs the same 12-step workflow a hundred times. Every step succeeds 95% of the time,
+    and a failed step doesn't crash anything: it hands a plausible, slightly-wrong artefact to the
+    next step, which builds on it politely. Run the hundred. Then place a checkpoint and see what
+    a human can still catch.
+  </p>
+</header>
+
+<main>
+
+  <section class="card">
+    <h3>The workflow · click a gap to place a checkpoint (max 4)</h3>
+    <div class="rail" id="rail"></div>
+    <p class="raillegend">A <b>checkpoint</b> is a human review. Its bracket shows the only steps
+    it can still meaningfully verify: the last three. Older drift has been built upon; it reads as
+    foundation, not error.</p>
+    <div class="ctl">
+      <label for="rel"><span>Per-step reliability</span><b id="relval">95%</b></label>
+      <input type="range" id="rel" min="0" max="6" value="3" step="1" aria-describedby="verdict">
+    </div>
+    <div class="row">
+      <button class="btn primary" type="button" id="run">Run 100 workflows</button>
+      <button class="btn" type="button" id="reset">Clear checkpoints</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="grid2">
+      <div>
+        <h3>One hundred runs · all of them finish politely</h3>
+        <div class="beads" id="beads"></div>
+      </div>
+      <div>
+        <h3>The tally</h3>
+        <div class="pair">
+          <div class="score good"><div class="n" id="nok">–</div><div class="w">correct</div></div>
+          <div class="score badn"><div class="n" id="nbad">–</div><div class="w">silently wrong</div></div>
+        </div>
+        <div class="facts">
+          <div class="fact"><span>Expected</span><span id="formula">–</span></div>
+          <div class="fact"><span>Steps no checkpoint can see</span><span id="uncov">–</span></div>
+          <div class="fact"><span>Human reviews this design costs</span><span id="reviews">–</span></div>
+          <div class="fact"><span>"Verify every step of every run" costs</span><span>1,200</span></div>
+        </div>
+        <div class="band" id="verdict" role="status" aria-live="polite">–</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <p class="note" style="margin:0">
+      <b>Drift compounds because each step trusts the step before.</b> 0.95 twelve times is 0.54,
+      and no bead ever crashed to warn you: the wrong 46 are formatted, polite and sent. A
+      checkpoint is a human asking "is this still what we meant?" while the error is shallow
+      enough to see; one big review at the end inspects a finished artefact whose early mistakes
+      are now load-bearing, which is a rubber stamp wearing diligence's clothes. And the toy
+      flatters you: its reviewers catch everything in their window. Yours won't. Design the
+      checkpoints, don't promise the diligence.
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  Synthetic runs, deterministic: the same hundred trajectories per reliability setting every load,
+  so the class can argue about them. No AI runs on this page. No network, no storage, no
+  analytics. Part of <a href="../">ai-toys</a>.
+</footer>
+
+<script>
+"use strict";
+
+const STEPS = ["read request","look up account","check contract","draft scope","estimate cost",
+  "pick vendor","write proposal","apply discounts","compliance check","format document",
+  "address cover email","send"];
+const STOPS = [0.80,0.85,0.90,0.95,0.97,0.99,0.999];
+const SEED = 7, HORIZON = 3, MAXCP = 4;
+
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+/* Per-stop trajectory tables: failed steps per bead, bead-major, one stream per stop. */
+const TRAJ = STOPS.map(p => {
+  const r = mulberry32(SEED), t = [];
+  for(let b=0;b<100;b++){ const f=[]; for(let s=1;s<=12;s++) if(r()>p) f.push(s); t.push(f); }
+  return t;
+});
+
+const state = {stop:3, cps:[], running:false};
+const $ = id => document.getElementById(id);
+
+/* Verification-horizon simulation: a checkpoint after step c fixes a bead iff its first
+   uncaught error is within the last HORIZON steps. Returns per-bead final state + event log. */
+function simulate(){
+  const traj = TRAJ[state.stop], cps = [...state.cps].sort((a,b)=>a-b);
+  return traj.map(f => {
+    let wrongSince = null;
+    const events = [];                       // {s, type:"drift"|"fix"}
+    for(let s=1;s<=12;s++){
+      if(f.includes(s) && wrongSince===null){ wrongSince = s; events.push({s,type:"drift"}); }
+      if(cps.includes(s) && wrongSince!==null && wrongSince >= s-(HORIZON-1)){
+        wrongSince = null; events.push({s,type:"fix"});
+      }
+    }
+    return {ok: wrongSince===null, events};
+  });
+}
+function uncovered(){
+  const cover = new Set();
+  state.cps.forEach(c => { for(let s=Math.max(1,c-(HORIZON-1)); s<=c; s++) cover.add(s); });
+  let u=0; for(let s=1;s<=12;s++) if(!cover.has(s)) u++;
+  return {u, cover};
+}
+
+/* ---- rail scaffolding ---- */
+const stepEls = [], gapBtns = [];
+STEPS.forEach((name,i) => {
+  const st = document.createElement("div");
+  st.className = "step";
+  st.innerHTML = '<div class="cover"></div><div class="box">'+name+'</div>';
+  $("rail").appendChild(st); stepEls.push(st);
+  const gap = document.createElement("div");
+  gap.className = "gap";
+  const b = document.createElement("button");
+  b.type = "button"; b.textContent = "+";
+  b.setAttribute("aria-label","checkpoint after step "+(i+1)+": "+name);
+  b.setAttribute("aria-pressed","false");
+  b.addEventListener("click", () => {
+    const c = i+1, at = state.cps.indexOf(c);
+    if(at >= 0) state.cps.splice(at,1);
+    else if(state.cps.length < MAXCP) state.cps.push(c);
+    render(true);
+  });
+  gap.appendChild(b); $("rail").appendChild(gap); gapBtns.push(b);
+});
+const beadEls = [];
+for(let i=0;i<100;i++){
+  const b = document.createElement("div"); b.className = "bead";
+  $("beads").appendChild(b); beadEls.push(b);
+}
+
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let timer = null;
+
+function paintFinal(sim){
+  sim.forEach((r,i) => beadEls[i].className = "bead " + (r.ok ? "ok" : "wrong"));
+}
+
+function runAnimated(){
+  if(timer) clearInterval(timer);
+  const sim = simulate();
+  if(reduced){ paintFinal(sim); announce(sim); return; }
+  state.running = true; $("run").disabled = true;
+  beadEls.forEach(b => b.className = "bead ok");
+  let s = 1;
+  timer = setInterval(() => {
+    stepEls.forEach((el,i) => el.classList.toggle("active", i === s-1));
+    sim.forEach((r,i) => {
+      for(const e of r.events){
+        if(e.s === s) beadEls[i].className = "bead " + (e.type === "fix" ? "ok" : "wrong");
+      }
+    });
+    if(s === 12){
+      clearInterval(timer); timer = null;
+      stepEls.forEach(el => el.classList.remove("active"));
+      state.running = false; $("run").disabled = false;
+      paintFinal(sim); announce(sim);
+    }
+    s++;
+  }, 420);
+}
+
+function announce(sim){
+  const ok = sim.filter(r=>r.ok).length;
+  $("nok").textContent = ok; $("nbad").textContent = 100-ok;
+  const v = $("verdict"), p = STOPS[state.stop], {u} = uncovered();
+  const exp = Math.round(Math.pow(p,u)*100);
+  if(state.cps.length === 0 && ok <= 60 && p <= 0.95){
+    v.className = "band bad";
+    v.textContent = ok + " of 100 arrived correct. Every single run finished and looked done. " +
+      "An A-grade step, twelve times, is a coin flip.";
+  } else if(u === 0){
+    v.className = "band warn";
+    v.textContent = "Full coverage: " + ok + " of 100, for " + (state.cps.length*100) +
+      " human reviews, and only because this toy's reviewers are perfect. Yours are not.";
+  } else if(state.cps.length > 0){
+    v.className = "band " + (ok >= 85 ? "warn" : "bad");
+    v.textContent = ok + " of 100. Your brackets leave " + u + " steps that nobody can still " +
+      "verify; expected " + exp + ". Move them, don't just add them.";
+  } else {
+    v.className = "band bad";
+    v.textContent = ok + " of 100 with no checkpoints. The exponent is doing this, not bad luck: " +
+      "expected " + exp + ".";
+  }
+}
+
+function render(recount){
+  const p = STOPS[state.stop];
+  $("relval").textContent = (p*100).toFixed(p >= 0.999 ? 1 : 0) + "%";
+  const {u, cover} = uncovered();
+  stepEls.forEach((el,i) => el.classList.toggle("covered", cover.has(i+1)));
+  gapBtns.forEach((b,i) => b.setAttribute("aria-pressed", String(state.cps.includes(i+1))));
+  $("formula").textContent = p + "^" + u + " ≈ " + Math.round(Math.pow(p,u)*100) + " of 100";
+  $("uncov").textContent = u + " of 12";
+  $("reviews").textContent = (state.cps.length*100).toLocaleString();
+  const sim = simulate();
+  paintFinal(sim); announce(sim);
+}
+
+$("rel").addEventListener("input", e => { state.stop = +e.target.value; render(true); });
+$("run").addEventListener("click", runAnimated);
+$("reset").addEventListener("click", () => { state.cps = []; render(true); });
+if(new URLSearchParams(location.search).has("present")) document.body.classList.add("present");
+render(true);
+</script>
+</body>
+</html>

@@ -14,8 +14,8 @@ pattern and started memorising the noise. Never test on what you trained on.
 
 > Drag complexity to maximum: **train accuracy 100%**, and the decision boundary has grown little
 > islands, each fitted around a single stray point. Press **Show test data**: **test accuracy
-> 73%**, worse than the modest setting's 87%. The islands are memorised noise, and every one of
-> them now misclassifies the fresh points that landed there.
+> 73.3%**, far below the modest middle setting's **91.7%**. The islands are memorised noise, and
+> every one of them now misclassifies the fresh points that landed there.
 
 The secondary beat: the **train curve alone would have told you to max the slider**. Both curves
 plot side by side, and the toy makes the student watch the advice diverge: the rigged exam says
@@ -42,12 +42,18 @@ test number, and if someone quotes one accuracy figure, ask which data it was me
 
 ## 3. The data and the model
 
-Two classes in 2-D, generated once with seeded mulberry32 (**seed 17**) and then treated as
-frozen: **60 training points and 60 test points** drawn from the same two overlapping Gaussian
-blobs (class A: μ=(0.35, 0.62); class B: μ=(0.65, 0.40); shared σ=0.13, clamped to [0.05, 0.95]),
-plus **6 training-only label-noise points** (drawn inside the *other* class's blob) whose indices
-are frozen constants. The noise points are the future islands; sampling them live risks a tame
-draw with no islands, and the islands are the moment.
+Two classes in 2-D, generated once with seeded mulberry32 (**seed 36**) and then treated as
+frozen (regenerated at runtime from the same seed, params and draw order, which is equivalent to
+freezing). **60 training points and 60 test points** with deliberate structure, because two
+plain symmetric blobs never punish large k and the peak must sit mid-dial:
+
+- class A: a main blob of 24 at μ=(0.32, 0.62), σ=0.11, plus a **satellite of 6** at
+  μ=(0.74, 0.74), σ=0.05, deep in class-B territory (large k smooths the satellite away, which
+  is what makes underfitting visible);
+- class B: 30 at μ=(0.62, 0.38), σ=0.11; all coordinates clamped to [0.05, 0.95];
+- plus **6 training-only label-noise points** (3 per class, σ=0.08, drawn at the *other* class's
+  main blob) appended after the 120 clean points. The noise points are the future islands; a
+  lucky live draw with no islands would erase the moment, hence the frozen seed.
 
 The classifier is **k-nearest-neighbour**, honestly computed in-page; the complexity slider is
 inverted k across seven stops: **k = 31, 21, 15, 9, 5, 3, 1** (left = simplest). kNN is chosen
@@ -58,9 +64,15 @@ Boundary painting: classify a 90×70 grid of the unit square against the trainin
 cell by predicted class at low alpha. Recompute on slider move; 6,300 kNN queries against 66
 points is instant.
 
-Tune σ and the noise placement at build time so the frozen dataset yields, verified: train
-accuracy monotone rising to 100% at k=1; test accuracy peaking at k=9 ± one stop (≈87%) and
-falling to ≈73% at k=1. Freeze the verified numbers into this spec on first build.
+Verified curve for seed 36 (rebuilds must reproduce it; train/test accuracy % per stop):
+
+| k | 31 | 21 | 15 | 9 | 5 | 3 | 1 |
+|---|---|---|---|---|---|---|---|
+| train | 81.8 | 80.3 | 86.4 | 86.4 | 89.4 | 92.4 | **100** |
+| test | 85.0 | 85.0 | 88.3 | **91.7** | 86.7 | 80.0 | **73.3** |
+
+Test peaks uniquely at k=9; train rises to 100% at k=1 (with one small wiggle on the way, which
+is honest and harmless).
 
 ## 4. Derived numbers
 

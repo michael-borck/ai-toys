@@ -32,8 +32,8 @@ Single column, chart dominant:
    token and percentage, sorted by probability. The bar that was just sampled flashes; bars are
    `--system` purple, the sampled one outlined in `--accent`.
 3. **The controls**: **Temperature** slider (0 to 2, default 1) with three worded zones
-   (deterministic / balanced / adventurous); **Sample** button; **Run again** (resets the
-   continuation and replays from the same starting seed sequence).
+   (deterministic / balanced / adventurous); **Sample** button; **Run again** (clears the
+   sentence and continues the prompt's seed stream; see §4).
 4. **The verdict band**: after each sample, one sentence naming what happened ("picked the 2nd
    most likely token; 24% chances happen one time in four").
 
@@ -66,12 +66,16 @@ displayed chart is always *computed*, never hard-coded.
   (implement as argmax below T=0.05 and label the zone "deterministic"). At T=2 the chart
   visibly flattens. The bars re-animate as the slider moves: temperature *reshapes*, it does not
   add magic.
-- Sampling uses seeded mulberry32, **seed 7**, consumed in sequence. The seed and the Canberra
-  logits are chosen together so that, at T=1, **draw 1 lands on Canberra and draw 2 lands on
-  Sydney**. Every student sees the same two runs; the demo repeats on the projector. Verify this
-  pair at build time and freeze it.
-- **Run again** resets the PRNG to the start-of-prompt state, so a full replay is identical;
-  the "different answer" comes from consecutive draws, never from hidden randomness.
+- Sampling uses seeded mulberry32 with **one PRNG stream per prompt** (capital-of-Australia:
+  **seed 26**, verified: u₁=0.511 → Canberra, u₂=0.744 → Sydney at T=1), so the order in which a
+  student visits prompts never disturbs another prompt's sequence. Every fresh load followed by
+  Sample / Run again / Sample shows the same Canberra-then-Sydney pair on any machine; the demo
+  repeats on the projector.
+- **Run again** clears the sentence and **continues the prompt's stream** (it must not reset the
+  PRNG: a reset would replay Canberra and erase the moment). Reloading the page restores every
+  stream to the start; the "different answer" comes from consecutive draws, never from hidden
+  randomness. Each Sample consumes exactly one draw at every temperature, including the argmax
+  zone, so the sequence stays predictable.
 
 ## 5. Deliberate simplifications
 
