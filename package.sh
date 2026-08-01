@@ -6,6 +6,6 @@ cd "$(dirname "$0")"
 OUT="ai-toys-offline.zip"
 rm -f "$OUT"
 zip -r "$OUT" . \
-  -x '*.git*' -x "$OUT" -x 'package.sh' -x '*.DS_Store' -x '._*' >/dev/null
+  -x '*.git*' -x "$OUT" -x 'package.sh' -x '*.DS_Store' -x '._*' -x '*/._*' >/dev/null
 echo "→ $OUT  ($(du -h "$OUT" | cut -f1))"
 echo "  Open index.html from the unzipped folder. No server needed."
