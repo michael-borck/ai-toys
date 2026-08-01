@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jevons Dial: cheaper per task, dearer per year</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111a2e; --panel2:#0e1626; --line:#22304d;
+    --ink:#e6edf7; --muted:#93a4c3;
+    --accent:#fbbf24; --good:#34d399; --warn:#fbbf24; --bad:#f87171;
+    --fs:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(1200px 800px at 30% -10%, #16223c 0%, var(--bg) 55%);
+    color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:var(--fs); min-height:100vh; padding:20px clamp(14px,3vw,28px) 40px;
+  }
+  body.present{--fs:20px;}
+  header,main,footer{max-width:1080px; margin-left:auto; margin-right:auto;}
+  header{margin-bottom:16px;}
+  h1{font-size:1.45em; letter-spacing:.3px;}
+  h1 span{color:var(--accent);}
+  .sub{color:var(--muted); font-size:.85em; margin-top:6px; max-width:72ch; line-height:1.55;}
+  main{display:grid; gap:14px; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px;}
+  .card.wide{grid-column:1 / -1;}
+  h3{font-size:.72em; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted); margin-bottom:10px;}
+
+  .ctl label{display:flex; justify-content:space-between; font-size:.78em; color:var(--muted); margin-bottom:7px;}
+  .ctl label b{color:var(--accent); font-size:1.3em;}
+  input[type=range]{width:100%; accent-color:#fbbf24;}
+  .effnote{font-size:.74em; color:var(--muted); margin-top:5px;}
+  .effnote b{color:var(--ink);}
+  .modes{display:flex; gap:7px; flex-wrap:wrap; margin-top:12px;}
+  .opt{flex:1 1 auto; background:var(--panel2); border:1px solid var(--line); color:var(--muted);
+       border-radius:10px; padding:9px 12px; cursor:pointer; font-size:.78em; font-weight:600; text-align:left;}
+  .opt small{display:block; font-weight:400; font-size:.85em; opacity:.75; margin-top:2px;}
+  .opt:hover{color:var(--ink);}
+  .opt[aria-pressed=true]{color:var(--ink); border-color:#3b82f6;
+    background:linear-gradient(180deg,#1a2a4a,#12203d); box-shadow:0 0 0 1px #3b82f655;}
+
+  .counters{display:grid; gap:10px; grid-template-columns:1fr 1fr; margin-top:14px;}
+  .cnt{border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--panel2);}
+  .cnt.spend{grid-column:1 / -1;}
+  .cnt .n{font-size:1.5em; font-weight:800;}
+  .cnt.spend .n{font-size:2em;}
+  .cnt .w{font-size:.68em; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; margin-top:2px;}
+  .cnt .d{font-size:.74em; font-weight:700; margin-top:4px;}
+  .cnt .d.up{color:var(--bad);} .cnt .d.down{color:var(--good);}
+  .cnt.spend .n.up{color:var(--bad);} .cnt.spend .n.down{color:var(--good);}
+
+  svg{width:100%; height:auto; display:block; margin-top:4px;}
+  .band{display:block; text-align:center; margin-top:12px; padding:9px 14px; border-radius:10px;
+        font-size:.82em; font-weight:700; letter-spacing:.3px; line-height:1.45;}
+  .band.bad{background:#f8717122; color:var(--bad); border:1px solid #f8717155;}
+  .band.warn{background:#fbbf2422; color:var(--warn); border:1px solid #fbbf2455;}
+  .band.ok{background:#34d39922; color:var(--good); border:1px solid #34d39955;}
+
+  .uses{margin-top:4px;}
+  .use{display:flex; gap:10px; align-items:baseline; padding:6px 0; border-top:1px solid var(--line);
+       font-size:.8em; color:var(--muted);}
+  .use:first-child{border-top:0;}
+  .use .price{flex:0 0 4.2em; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.9em;}
+  .use .what{flex:1;}
+  .use .n{flex:0 0 auto; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.9em;}
+  .use.lit{color:var(--ink);}
+  .use.lit .price{color:var(--good);}
+  .use .tag{font-size:.85em; font-weight:700; letter-spacing:.5px;}
+  .use.lit .tag{color:var(--good);} .use .tag{color:#3c4c6e;}
+
+  .note{color:var(--muted); font-size:.8em; line-height:1.6;}
+  .note b{color:var(--ink); font-weight:600;}
+  footer{color:var(--muted); font-size:.74em; line-height:1.6; margin-top:18px;}
+  footer a{color:var(--muted);}
+  @media (max-width:860px){ main{grid-template-columns:minmax(0,1fr);} }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Jevons Dial: <span>cheaper per task, dearer per year</span></h1>
+  <p class="sub">
+    A firm adopts an AI drafting tool: $1.00 a task, 100 tasks a day, $100 a day. Engineering
+    keeps making it more efficient. Drag the cost down and watch the bill; then flip the toggle
+    and see the one assumption the whole paradox hangs on.
+  </p>
+</header>
+
+<main>
+
+  <section class="card">
+    <h3>The dial</h3>
+    <div class="ctl">
+      <label for="c"><span>Cost per task</span><b id="cval">$1.00</b></label>
+      <input type="range" id="c" min="-2" max="0" value="0" step="0.05" aria-describedby="verdict">
+      <p class="effnote" id="eff"><b>1×</b> efficiency vs launch</p>
+    </div>
+    <div class="modes">
+      <button class="opt" type="button" data-m="elastic" aria-pressed="true">Cheap AI finds new uses
+        <small>demand is elastic (ε = 1.6): low prices unlock work nobody did before</small></button>
+      <button class="opt" type="button" data-m="fixed" aria-pressed="false">Uses are fixed
+        <small>demand is inelastic (ε = 0.3): the firm does the same work, cheaper</small></button>
+    </div>
+    <div class="counters">
+      <div class="cnt spend"><div class="n" id="spend">–</div>
+        <div class="w">total spend per day</div><div class="d" id="spendd">–</div></div>
+      <div class="cnt"><div class="n" id="tasks">–</div>
+        <div class="w">tasks per day</div><div class="d" id="tasksd">–</div></div>
+      <div class="cnt"><div class="n" id="energy">–</div>
+        <div class="w">energy per day (kWh)</div><div class="d" id="energyd">–</div></div>
+    </div>
+    <div class="band" id="verdict" role="status" aria-live="polite">–</div>
+  </section>
+
+  <section class="card">
+    <h3>The demand curve · price vs tasks (log-log)</h3>
+    <svg id="chart" viewBox="0 0 460 300" aria-hidden="true"></svg>
+    <h3 style="margin-top:14px">What unlocks as it gets cheap</h3>
+    <div class="uses" id="uses"></div>
+  </section>
+
+  <section class="card wide">
+    <p class="note" style="margin:0">
+      <b>Efficiency is a throttle on price, not on appetite.</b> William Jevons watched better
+      steam engines increase Britain's coal burn in 1865, and the mechanism has not changed: when
+      a unit of work gets cheap enough, people find new work to do with it, and total consumption
+      rises through the efficiency gain. Whether that happens to your AI budget hangs on one
+      question the model cannot answer: <b>what will your people start doing once it is this
+      cheap?</b> Every line item in the unlock list is a human decision. So are the emissions,
+      and so is the headcount plan that assumed "more efficient" meant "less used".
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  Illustrative closed-form model, deterministic: the same numbers at every setting, every load.
+  Constant elasticities bracket a messy reality; no forecast of any real product is implied.
+  No AI runs on this page. No network, no storage, no analytics. Part of <a href="../">ai-toys</a>.
+</footer>
+
+<script>
+"use strict";
+
+const EPS = {elastic:1.6, fixed:0.3};
+const T0 = 100, C0 = 1.00, E0 = 0.02;          // launch: 100 tasks/day at $1.00, 0.02 kWh/task
+
+const USES = [
+  {below:1.00, what:"draft the monthly board report", share:1},
+  {below:0.50, what:"summarise every client meeting", share:9},
+  {below:0.25, what:"first-pass every support ticket", share:30},
+  {below:0.10, what:"draft every outbound email", share:160},
+  {below:0.05, what:"rewrite the knowledge base nightly", share:300},
+  {below:0.02, what:"re-analyse the ticket archive on every product change", share:500}
+];
+
+const state = {logc:0, mode:"elastic"};
+const $ = id => document.getElementById(id);
+
+const cost   = () => Math.pow(10, state.logc);
+const tasks  = C => T0 * Math.pow(C/C0, -EPS[state.mode]);
+const spend  = C => C * tasks(C);
+const kwh    = C => tasks(C) * E0 * Math.pow(C/C0, 0.7);
+
+function fmt(n){
+  if(n >= 100) return Math.round(n).toLocaleString();
+  if(n >= 10) return n.toFixed(0);
+  return n.toFixed(1);
+}
+function money(n){ return "$" + fmt(n); }
+
+function drawChart(){
+  const svg = $("chart");
+  /* x: log10 C in [-2,0] -> [50,440]; y: log10 tasks in [1.3, 4.4] -> [260,20] */
+  const X = lc => 50 + (lc+2)/2*390;
+  const Y = lt => 260 - (lt-1.3)/3.1*240;
+  let g = '<line x1="50" y1="260" x2="440" y2="260" stroke="#22304d"/>' +
+          '<line x1="50" y1="20" x2="50" y2="260" stroke="#22304d"/>';
+  [["$0.01",-2],["$0.10",-1],["$1.00",0]].forEach(([t,lc]) =>
+    g += '<text x="'+X(lc)+'" y="276" fill="#93a4c3" font-size="10" text-anchor="middle">'+t+'</text>');
+  [["100",2],["1k",3],["10k",4]].forEach(([t,lt]) =>
+    g += '<text x="44" y="'+(Y(lt)+3)+'" fill="#93a4c3" font-size="10" text-anchor="end">'+t+'</text>' +
+         '<line x1="50" y1="'+Y(lt)+'" x2="440" y2="'+Y(lt)+'" stroke="#182339"/>');
+  /* constant-spend line: tasks = 100/C -> log tasks = 2 - logC */
+  g += '<polyline fill="none" stroke="#3c4c6e" stroke-width="1.4" stroke-dasharray="5 4" points="' +
+       [-2,-1.5,-1,-.5,0].map(lc => X(lc)+","+Y(2-lc)).join(" ") + '"/>' +
+       '<text x="'+(X(-1.72))+'" y="'+(Y(2+1.72)+12)+'" fill="#3c4c6e" font-size="9">same bill as launch</text>';
+  /* demand curves for both modes; active one bright */
+  for(const m of ["fixed","elastic"]){
+    const active = m === state.mode;
+    const pts = [];
+    for(let lc=0; lc>=-2.001; lc-=0.1){
+      const t = T0 * Math.pow(Math.pow(10,lc)/C0, -EPS[m]);
+      pts.push(X(lc)+","+Y(Math.log10(t)));
+    }
+    g += '<polyline fill="none" stroke="'+(active?"#fbbf24":"#3c4c6e")+'" stroke-width="'+(active?2.4:1.4)+'" points="'+pts.join(" ")+'"/>';
+  }
+  /* launch pin + operating dot */
+  g += '<circle cx="'+X(0)+'" cy="'+Y(2)+'" r="4.5" fill="none" stroke="#93a4c3" stroke-width="1.6"/>' +
+       '<text x="'+(X(0)-8)+'" y="'+(Y(2)-8)+'" fill="#93a4c3" font-size="9" text-anchor="end">launch</text>';
+  const lt = Math.log10(tasks(cost()));
+  g += '<circle cx="'+X(state.logc)+'" cy="'+Y(lt)+'" r="6" fill="#fbbf24"/>';
+  svg.innerHTML = g;
+}
+
+function render(){
+  const C = cost(), t = tasks(C), s = spend(C), e = kwh(C);
+  $("cval").textContent = "$" + C.toFixed(2);
+  $("eff").innerHTML = "<b>" + fmt(C0/C) + "×</b> efficiency vs launch";
+  document.querySelectorAll(".modes .opt").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.m === state.mode)));
+
+  const delta = (el, now, base, unit) => {
+    const up = now > base*1.005, down = now < base*0.995;
+    el.className = "d " + (up ? "up" : down ? "down" : "");
+    el.textContent = up ? "RISING · " + fmt(now/base) + "× launch"
+                   : down ? "FALLING · " + fmt(base/now) + "× less than launch"
+                   : "at launch level";
+  };
+  $("spend").textContent = money(s);
+  $("spend").className = "n " + (s > 100.5 ? "up" : s < 99.5 ? "down" : "");
+  delta($("spendd"), s, 100);
+  $("tasks").textContent = fmt(t);
+  delta($("tasksd"), t, 100);
+  $("energy").textContent = fmt(e);
+  delta($("energyd"), e, 2);
+
+  const v = $("verdict");
+  if(state.mode === "elastic" && C < 0.99){
+    v.className = "band bad";
+    v.textContent = "Demand is elastic: every cent cheaper RAISES the bill. " + fmt(C0/C) +
+      "× more efficient, " + fmt(s/100) + "× the spend, and the energy line went up too.";
+  } else if(state.mode === "fixed" && C < 0.99){
+    v.className = "band ok";
+    v.textContent = "Uses are fixed, so efficiency does what the intuition promised: same work, " +
+      money(s) + " a day. The whole paradox lives in the other toggle.";
+  } else {
+    v.className = "band warn";
+    v.textContent = "This is launch. Drag the dial down and watch the spend card, not the cost dial.";
+  }
+
+  const uses = $("uses");
+  uses.innerHTML = "";
+  let shareSum = 0;
+  USES.forEach(u => { if(state.mode==="elastic" && C <= u.below) shareSum += u.share; });
+  USES.forEach(u => {
+    const lit = state.mode === "elastic" && C <= u.below;
+    const row = document.createElement("div");
+    row.className = "use" + (lit ? " lit" : "");
+    const n = lit && shareSum ? Math.round(u.share/shareSum*t) : 0;
+    row.innerHTML = '<span class="price">&lt; $'+u.below.toFixed(2)+'</span>' +
+      '<span class="what">'+u.what+'</span>' +
+      (lit ? '<span class="n">≈'+fmt(n)+'/day</span>' : '<span class="tag">LOCKED</span>');
+    uses.appendChild(row);
+  });
+  if(state.mode === "fixed"){
+    uses.insertAdjacentHTML("beforeend",
+      '<div class="use"><span class="what" style="font-style:italic">With uses fixed, nothing new unlocks; that assumption is the toggle above.</span></div>');
+  }
+
+  drawChart();
+}
+
+$("c").addEventListener("input", e => { state.logc = +e.target.value; render(); });
+document.querySelectorAll(".modes .opt").forEach(b =>
+  b.addEventListener("click", () => { state.mode = b.dataset.m; render(); }));
+if(new URLSearchParams(location.search).has("present")) document.body.classList.add("present");
+render();
+</script>
+</body>
+</html>

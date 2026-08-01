@@ -13,10 +13,10 @@ started). A cluster is an artefact until a person names it and the name survives
 **The "wait, what?" moment**:
 
 > Run k=3 from **Start A** to convergence: the banner says **"Converged: nothing moved ✓"** and
-> the bridge documents belong to the left cluster. Press **Start B**, same k, same data, run
-> again: **"Converged ✓"** again, similar total distance, and **eleven points have changed
-> allegiance**: the bridge now belongs to the right cluster. The algorithm is equally proud of
-> both answers. It has no opinion; it has a stopping condition.
+> the middle clump of documents belongs to the left cluster (distance 6.18). Press **Start B**,
+> same k, same data, run again: **"Converged ✓"** again, distance 6.26, and **ten documents have
+> changed allegiance**: the clump now belongs to the right cluster. The algorithm is equally
+> proud of both answers. It has no opinion; it has a stopping condition.
 
 The secondary beat: set **k=5**. The algorithm happily shatters one coherent blob into two
 "segments" and converges with its usual confidence. Nothing in the output says "too many"; the
@@ -38,8 +38,8 @@ Two columns, collapsing below 860px:
 3. **The readouts**: iteration count; "points that switched: N"; **total distance** (sum of
    point-to-centroid distances, the algorithm's own score, labelled "what the algorithm is
    minimising"); the convergence banner; the verdict band. After convergence from two different
-   starts at the same k, the verdict compares them: "Start A: distance 7.91. Start B: distance
-   8.03. Both converged. **They disagree on 11 of 60 tickets.**" (freeze exact figures at build).
+   starts at the same k, the verdict compares them: "Start A: distance 6.18. Start B: distance
+   6.26. Both converged. **They disagree on 10 of 60 tickets.**" (figures frozen from build).
 
 Closing card: *Orange will hand you this converged answer in one widget with no stepping and no
 second start. Now you know what it did, what it optimised, and what it never checked. The insight
@@ -48,24 +48,29 @@ with the points, the cluster was arithmetic, not meaning.*
 
 ## 3. The data and the starts
 
-Sixty 2-D points, generated once with seeded mulberry32 (**seed 53**) and frozen as constants in
-the source. The shape is engineered, because the ambiguity is the teaching case:
+Sixty 2-D points, generated once with seeded mulberry32 (**seed 53**, regenerated at runtime
+from the same seed, params and draw order). The shape is engineered, because the ambiguity is
+the teaching case; note the contested mass is a **compact midway clump**, not a strung-out
+bridge (a thin string always cascades into one basin: its edge points defect, the centroid
+drifts, and the rest follow; verified the hard way):
 
-- **Blob P** (18 points) top-left, compact;
-- **Blob Q** (20 points) right, compact;
-- **Blob R** (14 points) bottom-centre, slightly loose;
-- **The bridge** (8 points) strung between P and Q, spacing tuned so k=3 has two basins of
-  attraction: one assigning the bridge with P, one with Q.
+- **Blob P** (18 points) at μ=(0.18, 0.70), σ=0.05;
+- **Blob Q** (20 points) at μ=(0.78, 0.70), σ=0.05;
+- **The clump** (10 points) at μ=(0.48, 0.70), σ=0.03, whose allegiance is bistable at k=3;
+- **Blob R** (12 points) at μ=(0.50, 0.18), σ=(0.06, 0.05); all coordinates clamped [0.04, 0.96].
+- Generation order is P, Q, clump, R (x then y per point); changing it changes the dataset.
 
-Verify at build, then freeze: Start A and Start B at k=3 must converge to partitions differing
-on ≥10 points with total distances within 5% of each other; if seed 53 doesn't deliver that,
-adjust the bridge and re-freeze. Start C converges with the majority basin (three starts so
-"best of several restarts" is demonstrable: the honest practitioners' fix, named in the closing
-card).
+Verified at build (rebuilds must reproduce): k=3 **Start A converges in 2 iterations to
+(P+clump 28, Q 20, R 12), total distance 6.18**; **Start B converges to (P 18, clump+Q 30,
+R 12), distance 6.26** (1.2% apart); the two partitions **disagree on 10 of 60 points**
+(best-permutation matching). Start C converges with Start A's basin (three starts so "best of
+several restarts" is demonstrable: the honest practitioners' fix, named in the closing card).
 
-Starts are **fixed centroid coordinates per (k, start)**, hand-placed, never sampled at runtime:
-12 small coordinate tables in the source. For k=5, Start A splits Blob Q; Start B splits Blob P;
-the shattering must look clean, not degenerate (no empty clusters from any shipped start).
+Starts are **fixed centroid coordinates per (k, start)**, hand-placed, never sampled at runtime;
+the k=3 pair that produces the two truths: A = (0.33,0.70), (0.80,0.70), (0.50,0.20);
+B = (0.18,0.70), (0.65,0.70), (0.50,0.20); C = (0.18,0.70), (0.78,0.70), (0.50,0.20).
+For k=5, Start A splits Q (9+11), Start B splits P (9+9); k=4 Start B splits R (7+5). All 12
+shipped (k, start) combinations verified to converge with no empty clusters.
 
 ## 4. The algorithm, honestly
 

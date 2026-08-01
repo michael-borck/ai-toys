@@ -20,8 +20,8 @@ in an offline lab, from a USB stick, or uploaded to an LMS as a single file. Any
 | **[Next Token](next-token/)** | "the model knows things": same prompt, two runs, two answers; the model weighs, it does not know | ✅ ready |
 | **[Overfit](overfit/)** | "higher training accuracy means a better model": train climbs to 100% while test falls to 73% | ✅ ready |
 | **[Drift Compounds](drift-compounds/)** | "95% reliable per step is basically reliable": over 12 steps it is a coin flip, and the failures arrive polished | ✅ ready |
-| **[Jevons Dial](jevons-dial/)** | "more efficient means less used": halve the unit cost and watch total spend rise | 📋 planned |
-| **[K-Means Stepper](k-means-stepper/)** | "the clusters are in the data": same data, two starts, two confident truths | 📋 planned |
+| **[Jevons Dial](jevons-dial/)** | "more efficient means less used": make it 10× cheaper per task and the bill quadruples | ✅ ready |
+| **[K-Means Stepper](k-means-stepper/)** | "the clusters are in the data": same data, two starts, two confident truths | ✅ ready |
 
 Add `?present` to any toy (e.g. `threshold-dial/?present`) to bump type sizes for a projector.
 

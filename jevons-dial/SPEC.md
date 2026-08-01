@@ -55,9 +55,9 @@ All computed from closed-form formulas; no PRNG anywhere.
   inelastic beat rounds to "$10-ish"; show the computed $20 and let the card say "spend
   collapses".)
 - Energy: per-task energy falls with cost, `kWh/task = 0.02 × (C / 1.00)^0.7` (efficiency is
-  real, just slower than demand growth). Total = tasks × per-task. At C=$0.10 elastic: per-task
-  drops 5×, total still rises ≈ 8×; verify exact figures at build and freeze them into this
-  table.
+  real, just slower than demand growth). Total = tasks × per-task. Verified at build, C=$0.10
+  elastic: per-task drops 5.0× (0.02 → 0.004 kWh), total rises from 2.0 to **15.9 kWh/day**
+  (≈8×). Launch point: 100 tasks, $100, 2.0 kWh.
 - The unlock ticker, elastic mode only (hand-authored, each with a threshold cost and a task
   weight; weights are calibrated at build so lit weights sum to `tasks(C)` within rounding):
 
