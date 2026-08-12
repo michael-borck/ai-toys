@@ -4,7 +4,7 @@ Small self-contained web pages, each built to break **one** specific AI/ML misco
 lecture slides reliably fail to break. Companion collection to
 [security-toys](https://github.com/michael-borck/security-toys), same house rules, same identity.
 
-**▶ [michael-borck.github.io/ai-toys](https://michael-borck.github.io/ai-toys/)**
+**▶ [aitoys.borck.education](https://aitoys.borck.education/)**
 
 No install, no account, no network, no backend, no real model. Save any page and it still works:
 in an offline lab, from a USB stick, or uploaded to an LMS as a single file. Any toy that
