@@ -2,7 +2,8 @@
 
 Small self-contained web pages, each built to break **one** specific AI/ML misconception that
 lecture slides reliably fail to break. Companion collection to
-[security-toys](https://github.com/michael-borck/security-toys), same house rules, same identity.
+[security-toys](https://github.com/michael-borck/security-toys) and
+[programming-toys](https://github.com/michael-borck/programming-toys), same house rules, same identity.
 
 **▶ [aitoys.borck.education](https://aitoys.borck.education/)**
 
@@ -84,6 +85,13 @@ No test framework (the check is manual: opens from `file://`, works with no netw
 1024×768 on a projector, usable on a phone, keyboard-navigable). No analytics. No framework, no
 TypeScript, no build step. No backend. No API keys, no model downloads: every "model" is a
 deterministic simulation.
+
+## Related
+
+Catalogued under Resources on [teach.borck.education](https://teach.borck.education).
+Sibling collections: [security-toys](https://securitytoys.borck.education), which set the pattern,
+and [programming-toys](https://programmingtoys.borck.education), which applies it to programming
+misconceptions.
 
 ## Licence
 
