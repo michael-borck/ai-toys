@@ -26,6 +26,11 @@ in an offline lab, from a USB stick, or uploaded to an LMS as a single file. Any
 
 Add `?present` to any toy (e.g. `threshold-dial/?present`) to bump type sizes for a projector.
 
+**Companion:** [The Trust Tool](https://trusttool.borck.education/)
+([repo](https://github.com/michael-borck/trust-tool)) — a drag-the-scenario 2×2 game about where
+to trust AI output. Same audience, but deliberately not a toy (multi-file, 16 scenario packs,
+remembers best scores), so it lives in its own repo and gets a card on the landing page instead.
+
 ## Course mapping
 
 This repo is **course-agnostic and numbering-agnostic**; folders are named for what the toy *is*.
