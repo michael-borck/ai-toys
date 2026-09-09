@@ -2,7 +2,7 @@
 
 House rule 1 says every toy is a **single self-contained file**, so there is no shared stylesheet to
 link; that would make a toy unable to travel on its own, which is the property worth protecting.
-Consistency comes from pasting the block below instead. Duplicating ~30 lines of CSS eight times is
+Consistency comes from pasting the block below instead. Duplicating ~30 lines of CSS twelve times is
 a much cheaper problem than a toy that only works inside its folder.
 
 Inherited from [security-toys](https://github.com/michael-borck/security-toys) (which inherited it
@@ -41,7 +41,7 @@ if(new URLSearchParams(location.search).has("present")) document.body.classList.
   `box-shadow:0 0 0 1px #3b82f655`, and is expressed with `aria-pressed`, not a class, so screen
   readers get it free.
 - **Verdict colours are fixed**: `--good` green, `--warn` amber, `--bad` red. Don't re-map them per
-  toy; a red band must mean the same thing in all eight.
+  toy; a red band must mean the same thing in all twelve.
 - **Monospace only for data** the student is meant to read as a value: tokens, scores, table rows,
   probabilities. Never for prose.
 

@@ -23,6 +23,10 @@ in an offline lab, from a USB stick, or uploaded to an LMS as a single file. Any
 | **[Drift Compounds](drift-compounds/)** | "95% reliable per step is basically reliable": over 12 steps it is a coin flip, and the failures arrive polished | ✅ ready |
 | **[Jevons Dial](jevons-dial/)** | "more efficient means less used": make it 10× cheaper per task and the bill quadruples | ✅ ready |
 | **[K-Means Stepper](k-means-stepper/)** | "the clusters are in the data": same data, two starts, two confident truths | ✅ ready |
+| **[Perceptron](perceptron/)** | "AI decisions are mysterious": three weights and a threshold — change a weight, flip the verdict, same data | ✅ ready |
+| **[Pattern Spotter](pattern-spotter/)** | "the data speaks for itself": three charts, and more than one confident story fits each | ✅ ready |
+| **[Technique Picker](technique-picker/)** | "there is a default AI technique": five clients, five briefs, five different right answers | ✅ ready |
+| **[Scenario Sprint](scenario-sprint/)** | "technique selection is a technical detail": four client briefs, pick and defend — instructor-led class activity | ✅ ready · class activity |
 
 Add `?present` to any toy (e.g. `threshold-dial/?present`) to bump type sizes for a projector.
 
@@ -46,10 +50,14 @@ The mapping lives here rather than in the folder names. Adopting these in a unit
 | `threshold-dial` | 09 Does it actually work? |
 | `drift-compounds` | 10 Can it do the whole job? |
 | `jevons-dial` | 12 What comes next? |
+| `perceptron` | 11 How does it decide? |
+| `pattern-spotter` | 08 What is it saying? |
+| `technique-picker` | 09 Does it actually work? |
+| `scenario-sprint` | 10 Can it do the whole job? (synthesis) |
 
 ## House rules
 
-Every toy obeys all seven. They're what make eight pages feel like one set:
+Every toy obeys all seven. They're what make twelve pages feel like one set:
 
 1. **Single self-contained `index.html`.** No CDN, no external fonts, no `fetch`. This is the
    load-bearing rule: it survives an offline lab, an LMS upload, and 2029.

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pattern Spotter: the data does not speak for itself</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111a2e; --panel2:#0e1626; --line:#22304d;
+    --ink:#e6edf7; --muted:#93a4c3;
+    --accent:#fbbf24; --good:#34d399; --warn:#fbbf24; --bad:#f87171;
+    --user:#2dd4bf; --system:#a78bfa;
+    --fs:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(1200px 800px at 30% -10%, #16223c 0%, var(--bg) 55%);
+    color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:var(--fs); min-height:100vh; padding:20px clamp(14px,3vw,28px) 40px;
+  }
+  body.present{--fs:20px;}
+  header,main,footer{max-width:880px; margin-left:auto; margin-right:auto;}
+  header{margin-bottom:14px;}
+  h1{font-size:1.45em; letter-spacing:.3px;}
+  h1 span{color:var(--accent);}
+  .sub{color:var(--muted); font-size:.85em; margin-top:6px; max-width:72ch; line-height:1.55;}
+  .prog{height:6px; background:var(--panel2); border:1px solid var(--line); border-radius:99px;
+        margin-bottom:14px; overflow:hidden;}
+  .prog i{display:block; height:100%; width:0; background:var(--good); transition:width .4s;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px;
+        padding:16px 18px; margin-bottom:14px;}
+  h3{font-size:.72em; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted);
+     margin-bottom:10px;}
+  .num{display:inline-grid; place-items:center; width:1.6em; height:1.6em; border-radius:8px;
+       background:var(--panel2); border:1px solid var(--line); color:var(--accent);
+       font-weight:700; font-size:.85em; margin-right:8px;}
+  .q{font-size:.95em; margin-bottom:12px; line-height:1.55;}
+  .q b{color:var(--ink);}
+  .scene{color:var(--muted); font-size:.85em; line-height:1.55; margin-bottom:12px;}
+
+  .chart{background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+         padding:14px; margin-bottom:14px;}
+  .bars{display:flex; align-items:flex-end; gap:18px; height:150px; justify-content:center;}
+  .bar{width:56px; display:flex; flex-direction:column; justify-content:flex-end;
+       align-items:center; height:100%;}
+  .bar i{display:block; width:100%; border-radius:6px 6px 0 0; background:var(--user);
+         opacity:.85;}
+  .bar .v{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.72em;
+          color:var(--ink); margin-bottom:5px;}
+  .bar .l{font-size:.68em; color:var(--muted); margin-top:6px; text-align:center;}
+  svg.line{width:100%; height:auto; display:block;}
+  svg.line .grid-t{stroke:var(--line); opacity:.5;}
+  svg.line .trend{stroke:var(--bad); stroke-width:3; fill:none; stroke-linecap:round;}
+  svg.line .pt{fill:var(--ink);}
+  svg.line text{fill:var(--muted); font-size:11px; font-family:inherit;}
+
+  .segs{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px;}
+  .seg{background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+       padding:12px; text-align:center;}
+  .seg h4{font-size:.78em; color:var(--muted); font-weight:600; margin-bottom:6px;}
+  .seg .big{font-size:1.5em; font-weight:700; color:var(--user);
+            font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  .seg .w{font-size:.7em; color:var(--muted); margin-top:3px; line-height:1.5;}
+
+  .opts{display:grid; gap:8px;}
+  .opt{background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+       padding:11px 13px; text-align:left; color:var(--ink); cursor:pointer; font-size:.85em;
+       line-height:1.45; font-family:inherit;}
+  .opt:hover{border-color:#3b82f6;}
+  .opt b{display:block; font-size:1.05em; margin-bottom:3px;}
+  .opt.good{border-color:#34d39966; background:#34d39915;}
+  .opt.good b{color:var(--good);}
+  .opt.badpick{border-color:#f8717166; background:#f8717115;}
+  .opt.badpick b{color:var(--bad);}
+  .opt:disabled{cursor:default; opacity:.75;}
+  .opt:disabled:hover{border-color:var(--line);}
+
+  .fb{margin-top:12px; border-radius:10px; padding:12px 14px; font-size:.85em;
+      line-height:1.6; display:none;}
+  .fb.show{display:block;}
+  .fb.good{background:#34d39915; border:1px solid #34d39955;}
+  .fb.good b{color:var(--good);}
+  .fb.warnfb{background:#fbbf2410; border:1px solid #fbbf2455;}
+  .fb.warnfb b{color:var(--warn);}
+  .next{margin-top:14px; width:100%; background:var(--panel2); border:1px solid var(--line);
+        color:var(--ink); border-radius:10px; padding:11px; font-size:.9em; font-weight:700;
+        cursor:pointer;}
+  .next:hover:not(:disabled){border-color:#3b82f6;}
+  .next:disabled{opacity:.45; cursor:not-allowed;}
+  .note{font-size:.82em; color:var(--muted); line-height:1.6;}
+  .note b{color:var(--ink);}
+  .final{background:#fbbf2410; border:1px solid #fbbf2455; border-radius:12px;
+         padding:16px 18px; line-height:1.65; font-size:.9em;}
+  .final b{color:var(--warn);}
+  .final p{margin-bottom:10px;}
+  .final p:last-child{margin-bottom:0;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Pattern Spotter: <span>the data does not speak for itself</span></h1>
+  <p class="sub">Three small datasets. Three confident readings available for each. Spot the
+     pattern &mdash; then notice who is doing the work. Ninety seconds, no instructions needed.</p>
+</header>
+
+<div class="prog"><i id="prog"></i></div>
+<main>
+
+  <!-- 1: regional sales -->
+  <div class="card" id="ex1">
+    <h3><span class="num">1</span>Four quarters, four regions</h3>
+    <p class="scene">A retail chain's Q4 revenue, by region. The board pack goes out tomorrow.</p>
+    <div class="chart">
+      <div class="bars">
+        <div class="bar"><span class="v">$78.9K</span><i style="height:60%"></i><span class="l">North</span></div>
+        <div class="bar"><span class="v">$91.2K</span><i style="height:75%"></i><span class="l">South</span></div>
+        <div class="bar"><span class="v">$74.5K</span><i style="height:55%"></i><span class="l">East</span></div>
+        <div class="bar"><span class="v">$98.7K</span><i style="height:85%"></i><span class="l">West</span></div>
+      </div>
+    </div>
+    <p class="q"><b>What's the headline finding?</b></p>
+    <div class="opts">
+      <button class="opt" data-k="a"><b>Revenue consistency</b>All four regions land within a
+        normal band; no action needed this quarter.</button>
+      <button class="opt" data-k="b"><b>A geographic divide</b>West and South are outperforming
+        North and East by a wide margin.</button>
+      <button class="opt" data-k="c"><b>Random variation</b>Nothing structural; business as
+        usual, noise only.</button>
+    </div>
+    <div class="fb" id="fb1" role="status" aria-live="polite"></div>
+    <button class="next" id="n1" disabled>Next chart</button>
+  </div>
+
+  <!-- 2: satisfaction trend -->
+  <div class="card" id="ex2" hidden>
+    <h3><span class="num">2</span>Six months of satisfaction scores</h3>
+    <p class="scene">A software product's monthly customer satisfaction, January to June.
+       Same product, no major releases.</p>
+    <div class="chart">
+      <svg class="line" viewBox="0 0 420 230" role="img"
+           aria-label="Line chart: satisfaction falls steadily from 8.2 in January to 6.2 in June.">
+        <path class="grid-t" d="M40 30 H400 M40 80 H400 M40 130 H400 M40 180 H400" stroke-dasharray="3 4"/>
+        <path class="trend" d="M50 60 L110 55 L170 78 L230 105 L290 128 L350 155"/>
+        <circle class="pt" cx="50" cy="60" r="4"/><circle class="pt" cx="110" cy="55" r="4"/>
+        <circle class="pt" cx="170" cy="78" r="4"/><circle class="pt" cx="230" cy="105" r="4"/>
+        <circle class="pt" cx="290" cy="128" r="4"/><circle class="pt" cx="350" cy="155" r="4"/>
+        <text x="50" y="200" text-anchor="middle">Jan 8.2</text>
+        <text x="110" y="200" text-anchor="middle">Feb 8.3</text>
+        <text x="170" y="200" text-anchor="middle">Mar 7.8</text>
+        <text x="230" y="200" text-anchor="middle">Apr 7.2</text>
+        <text x="290" y="200" text-anchor="middle">May 6.8</text>
+        <text x="350" y="200" text-anchor="middle">Jun 6.2</text>
+      </svg>
+    </div>
+    <p class="q"><b>What does this trend suggest?</b></p>
+    <div class="opts">
+      <button class="opt" data-k="a"><b>Seasonal drift</b>Normal ups and downs; scores will
+        recover on their own.</button>
+      <button class="opt" data-k="b"><b>A systematic problem</b>A steady six-month decline
+        points to something structurally wrong.</button>
+      <button class="opt" data-k="c"><b>Market maturation</b>Customers are just getting harder
+        to please everywhere.</button>
+    </div>
+    <div class="fb" id="fb2" role="status" aria-live="polite"></div>
+    <button class="next" id="n2" disabled>Next chart</button>
+  </div>
+
+  <!-- 3: support segments -->
+  <div class="card" id="ex3" hidden>
+    <h3><span class="num">3</span>Support load by customer segment</h3>
+    <p class="scene">A SaaS company's support desk, split by segment. Tickets per month and
+       average resolution time.</p>
+    <div class="segs">
+      <div class="seg"><h4>Enterprise</h4><div class="big">2.1</div>
+        <div class="w">tickets / month<br>resolution: 6 h</div></div>
+      <div class="seg"><h4>SME</h4><div class="big">4.7</div>
+        <div class="w">tickets / month<br>resolution: 18 h</div></div>
+      <div class="seg"><h4>Education</h4><div class="big">8.3</div>
+        <div class="w">tickets / month<br>resolution: 32 h</div></div>
+    </div>
+    <p class="q" style="margin-top:12px;"><b>Which insight is most worth management's time?</b></p>
+    <div class="opts">
+      <button class="opt" data-k="a"><b>Hire where the volume is</b>Education generates the most
+        tickets, so staff up there first.</button>
+      <button class="opt" data-k="b"><b>Segments need different service</b>The pattern is the
+        ratio, not the total: education files 4× the tickets and waits 5× longer.</button>
+      <button class="opt" data-k="c"><b>Charge to cover cost</b>Price education customers to
+        recover their support burden.</button>
+    </div>
+    <div class="fb" id="fb3" role="status" aria-live="polite"></div>
+    <button class="next" id="n3" disabled>See what just happened</button>
+  </div>
+
+  <!-- final -->
+  <div class="card" id="fin" hidden>
+    <h3>What just happened</h3>
+    <div class="final">
+      <p>You read three charts in about ninety seconds &mdash; and in each one, <b>more than one
+         confident story fit the same numbers</b>. Consistency or divide? Season or failure?
+         Volume or ratio? The data never argued. <b>Your interpretation did the work</b> &mdash;
+         using context the chart does not contain.</p>
+      <p>That is the whole lesson. &ldquo;The data speaks for itself&rdquo; is the most expensive
+         sentence in analytics: whatever story you saw first felt like it came <i>from</i> the
+         data, but it came <i>through you</i>. Machines that find patterns will inherit your
+         framing &mdash; including its blind spots.</p>
+      <p class="note">Which is why the next question is never &ldquo;what pattern do you see?&rdquo;
+         but &ldquo;what would change your mind?&rdquo; &mdash; and why
+         <b>k-means-stepper</b> shows the algorithm-side version of this exact trap.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const FB = {
+  1:{
+    good:"Right. West ($98.7K) and South ($91.2K) clear North ($78.9K) and East ($74.5K) by 15-25%. \
+That is a structural gap, not noise — and it was hiding inside a perfectly ordinary-looking bar chart.",
+    warn:"Reasonable — and that is exactly the trap. All four bars look comfortably alike until you \
+compare the pairs: West clears East by roughly a quarter. \u201CConsistency\u201D and \u201Cnoise\u201D were both \
+available readings. Which one you saw first said more about you than about the bars."
+  },
+  2:{
+    good:"Right. Six consecutive monthly declines (8.2 → 6.2) with no release in between is a \
+pattern, not weather. Seasonal stories need a mechanism that resets — nothing here resets.",
+    warn:"Fair — \u201Cit will recover\u201D is genuinely plausible. But notice what the chart cannot \
+do: it cannot tell you whether the cause is seasonal or structural. Six monotonic monthly drops is \
+the pattern either way. Deciding the STORY requires information that is not on this chart — and \
+deciding by confidence alone is how small problems survive until they are large."
+  },
+  3:{
+    good:"Right. Education files 4× the tickets and waits 5× longer than enterprise. The story is \
+the ratio, not the volume — one support model fits neither segment.",
+    warn:"Volume is the obvious read. But look at the ratio: 8.3 tickets AND 32-hour resolution \
+against 2.1 and 6. The finding worth management's time is that these segments have fundamentally \
+different needs — hiring more of the same support does not touch that."
+  }
+};
+
+const answered = {1:false, 2:false, 3:false};
+
+document.querySelectorAll(".card .opt").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const card = btn.closest(".card");
+    const n = +card.id.replace("ex","");
+    if(answered[n]) return;
+    answered[n] = true;
+    const good = btn.dataset.k === "b";
+    card.querySelectorAll(".opt").forEach(o => {
+      o.disabled = true;
+      if(o.dataset.k === "b") o.classList.add("good");
+    });
+    if(!good) btn.classList.add("badpick");
+    const fb = $("fb"+n);
+    fb.className = "fb show " + (good ? "good" : "warnfb");
+    fb.innerHTML = "<b>" + (good ? "Sharp eye." : "Wait, what?") + "</b> " + FB[n][good ? "good" : "warn"];
+    const nx = $("n"+n);
+    nx.disabled = false;
+    if(n === 3) nx.textContent = "See what just happened";
+    $("prog").style.width = (n / 3 * 100) + "%";
+  });
+});
+
+["n1","n2","n3"].forEach((id, i) => {
+  $(id).addEventListener("click", () => {
+    $("ex"+(i+1)).hidden = true;
+    if(i < 2){ $("ex"+(i+2)).hidden = false; }
+    else { $("fin").hidden = false; }
+    $("prog").style.width = ((i+1) / 3 * 100) + "%";
+    window.scrollTo({top:0, behavior:"smooth"});
+  });
+});
+
+if(new URLSearchParams(location.search).has("present")) document.body.classList.add("present");
+</script>
+</body>
+</html>

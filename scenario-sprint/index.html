@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scenario Sprint: pick the technique, defend the call</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111a2e; --panel2:#0e1626; --line:#22304d;
+    --ink:#e6edf7; --muted:#93a4c3;
+    --accent:#fbbf24; --good:#34d399; --warn:#fbbf24; --bad:#f87171;
+    --user:#2dd4bf; --system:#a78bfa;
+    --fs:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(1200px 800px at 30% -10%, #16223c 0%, var(--bg) 55%);
+    color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:var(--fs); min-height:100vh; padding:20px clamp(14px,3vw,28px) 40px;
+  }
+  body.present{--fs:20px;}
+  header,main,footer{max-width:980px; margin-left:auto; margin-right:auto;}
+  header{margin-bottom:14px;}
+  h1{font-size:1.45em; letter-spacing:.3px;}
+  h1 span{color:var(--accent);}
+  h2{font-size:1.1em; margin-bottom:10px;}
+  .sub{color:var(--muted); font-size:.85em; margin-top:6px; max-width:72ch; line-height:1.55;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px;
+        padding:16px 18px; margin-bottom:14px;}
+  h3{font-size:.72em; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted);
+     margin-bottom:10px;}
+  .grid{display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(210px,1fr));}
+  .scard{background:var(--panel2); border:1px solid var(--line); border-radius:12px;
+         padding:13px 14px; cursor:pointer; text-align:left; color:var(--ink);
+         font-family:inherit; font-size:.84em; line-height:1.55;}
+  .scard:hover{border-color:#3b82f6;}
+  .scard[aria-pressed="true"]{border-color:#3b82f6;
+    background:linear-gradient(180deg,#1a2a4a,#12203d); box-shadow:0 0 0 1px #3b82f655;}
+  .scard h4{font-size:.95em; margin-bottom:7px;}
+  .scard .tag{display:inline-block; font-size:.62em; font-weight:700; letter-spacing:.6px;
+              text-transform:uppercase; color:var(--user); border:1px solid #2dd4bf55;
+              background:#2dd4bf11; border-radius:99px; padding:2px 8px; margin-bottom:8px;}
+  .scard p b{color:var(--muted); font-weight:600;}
+  .brief{background:var(--panel2); border-left:3px solid var(--user); border-radius:0 10px 10px 0;
+         padding:12px 14px; margin:10px 0; font-size:.88em; line-height:1.6;}
+  .brief i{color:var(--muted); font-style:normal; font-size:.78em; display:block; margin-top:8px;}
+  .cols{display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+        margin-top:12px;}
+  .box{background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+       padding:12px 14px; font-size:.82em; line-height:1.6;}
+  .box h4{font-size:.72em; text-transform:uppercase; letter-spacing:1.1px; color:var(--muted);
+          margin-bottom:8px;}
+  .box ul{padding-left:1.1em;}
+  .box li{margin-bottom:5px;}
+  .box li b{color:var(--ink);}
+  .box .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; color:var(--accent);
+             font-size:.92em;}
+  .tasks li{margin-bottom:7px;}
+  .details{display:none;}
+  .details.open{display:block;}
+  .timer{display:flex; align-items:center; gap:14px; background:var(--panel2);
+         border:1px solid var(--line); border-radius:12px; padding:12px 16px;
+         margin-bottom:14px; flex-wrap:wrap;}
+  .timer .t{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:1.7em;
+            font-weight:700; color:var(--accent); min-width:4.2em;}
+  .timer button{background:var(--panel); border:1px solid var(--line); color:var(--muted);
+                border-radius:8px; padding:8px 14px; font-size:.8em; cursor:pointer;
+                font-family:inherit;}
+  .timer button:hover{color:var(--ink); border-color:#3b82f6;}
+  .timer .lbl{font-size:.78em; color:var(--muted); margin-left:auto; max-width:38ch; line-height:1.5;}
+  .note{font-size:.82em; color:var(--muted); line-height:1.6;}
+  .note b{color:var(--ink);}
+  .checklist{list-style:none; padding-left:0;}
+  .checklist li{margin-bottom:6px; padding-left:1.4em; position:relative;}
+  .checklist li::before{content:"☐"; position:absolute; left:0; color:var(--accent);}
+</style>
+</head>
+<body>
+<header>
+  <h1>Scenario Sprint: <span>pick the technique, defend the call</span></h1>
+  <p class="sub">Instructor-led class activity &mdash; teams of 3&ndash;5, one 60-minute block.
+     Each team takes one client, frames the problem, chooses and tests a technique, and defends
+     the recommendation in a three-minute pitch. There is rarely one right answer; there is
+     always a justified one.</p>
+</header>
+
+<div class="timer">
+  <span class="t" id="clock">60:00</span>
+  <button id="start">Start timer</button>
+  <button id="reset">Reset</button>
+  <span class="lbl">Suggested rhythm: 45 min team work &rarr; 15 min pitches (3 min each +
+    1 min questions).</span>
+</div>
+
+<main>
+  <div class="card">
+    <h3>Pick your client</h3>
+    <p class="note" style="margin-bottom:12px;">Each team selects one scenario. Multiple teams on
+       the same scenario makes a better comparison panel at pitch time.</p>
+    <div class="grid">
+      <button class="scard" data-t="healthcare" aria-pressed="false">
+        <span class="tag">Healthcare</span>
+        <h4>Melbourne Health Network</h4>
+        <p><b>Challenge:</b> patient readmission prediction.<br>
+           <b>Focus:</b> explainable AI for clinical decisions.<br>
+           <b>Complexity:</b> high regulatory requirements.</p>
+      </button>
+      <button class="scard" data-t="fintech" aria-pressed="false">
+        <span class="tag">Fintech</span>
+        <h4>Aussie Fintech Startup</h4>
+        <p><b>Challenge:</b> credit risk assessment.<br>
+           <b>Focus:</b> accuracy balanced with fairness.<br>
+           <b>Complexity:</b> compliance plus innovation.</p>
+      </button>
+      <button class="scard" data-t="retail" aria-pressed="false">
+        <span class="tag">Retail</span>
+        <h4>National Supermarket Chain</h4>
+        <p><b>Challenge:</b> dynamic pricing optimisation.<br>
+           <b>Focus:</b> real-time decisions at scale.<br>
+           <b>Complexity:</b> competitive dynamics.</p>
+      </button>
+      <button class="scard" data-t="mining" aria-pressed="false">
+        <span class="tag">Mining</span>
+        <h4>Australian Mining Corp</h4>
+        <p><b>Challenge:</b> equipment failure prediction.<br>
+           <b>Focus:</b> safety and operational efficiency.<br>
+           <b>Complexity:</b> high-stakes, safety-critical.</p>
+      </button>
+    </div>
+  </div>
+
+  <!-- HEALTHCARE -->
+  <div class="card details" id="d-healthcare">
+    <h2>&#127973; Melbourne Health Network &mdash; patient readmission prediction</h2>
+    <div class="brief">"We need to identify patients at high risk of readmission within 30 days.
+      Our current process is inconsistent &mdash; some doctors spot at-risk patients, others miss
+      obvious cases. We want AI to help, but any recommendation must be explainable to medical
+      staff and auditable for compliance."
+      <i>&mdash; Dr. Sarah Chen, Chief Medical Officer. Stakeholders: medical staff, hospital
+      administrators, regulators, patients.</i></div>
+    <div class="cols">
+      <div class="box"><h4>Available data (2 years, 50,000 records)</h4>
+        <ul><li>Demographics: age, gender, location, insurance</li>
+            <li>Clinical: diagnosis, comorbidities, severity scores</li>
+            <li>Treatment: length of stay, procedures, medications</li>
+            <li>History: previous admissions, compliance</li>
+            <li>Outcome: readmitted within 30 days (yes/no) &mdash; <b>12% base rate</b></li></ul></div>
+      <div class="box"><h4>Team tasks (45 min)</h4>
+        <ul class="tasks"><li><b>Problem analysis (10):</b> classification or regression? Which
+          business requirement dominates?</li>
+          <li><b>Technique selection (15):</b> compare decision trees against alternatives</li>
+          <li><b>Build &amp; test (15):</b> implement the recommended approach</li>
+          <li><b>Business case (5):</b> recommendation plus justification</li></ul></div>
+      <div class="box"><h4>Workflow starters</h4>
+        <p class="mono">[File] &rarr; [Data Sampler] &rarr; [Tree] &rarr; [Tree Viewer] + [Test &amp; Score]</p>
+        <p class="mono" style="margin-top:6px;">[File] &rarr; [Data Sampler] &rarr; [Tree, SVM, kNN] &rarr; [Test &amp; Score]</p>
+        <p style="margin-top:8px;">Widgets worth exploring: Tree Viewer (interpretable rules),
+          Test &amp; Score, Confusion Matrix, Feature Statistics.</p></div>
+      <div class="box"><h4>Pitch deliverables</h4>
+        <ul class="checklist"><li>Technique recommendation &mdash; which approach, and why</li>
+          <li>Explainability strategy &mdash; how doctors read the recommendations</li>
+          <li>Performance metrics &mdash; accuracy, precision, recall</li>
+          <li>Implementation plan &mdash; integration into clinical workflows</li>
+          <li>Risk assessment &mdash; what could go wrong, and mitigation</li></ul></div>
+    </div>
+    <p class="note" style="margin-top:12px;"><b>Facilitator angle:</b> the lesson is the tension
+       between accuracy and interpretability under regulation &mdash; not the winning model.
+       Cross-link: <b>technique-picker</b>, scenario 2.</p>
+  </div>
+
+  <!-- FINTECH -->
+  <div class="card details" id="d-fintech">
+    <h2>&#128179; Aussie Fintech Startup &mdash; credit risk assessment</h2>
+    <div class="brief">"We're disrupting traditional lending by serving customers the banks
+      reject. We need AI more sophisticated than a credit score, but we can't build a system
+      that discriminates against protected groups &mdash; and we must explain our decisions to
+      regulators."
+      <i>&mdash; Alex Thompson, CTO. Challenges: serve the underbanked fairly; compete on speed;
+      comply with anti-discrimination law; keep the AI advantage.</i></div>
+    <div class="cols">
+      <div class="box"><h4>Available data (18 months, 25,000 applications)</h4>
+        <ul><li>Traditional: credit score, income, employment history</li>
+            <li>Alternative: utility payments, rent history, education</li>
+            <li>Behavioural: application completion patterns, response times</li>
+            <li>Social: references, guarantor information</li>
+            <li>Outcome: default within 12 months (yes/no) &mdash; <b>8% base rate</b></li></ul></div>
+      <div class="box"><h4>Team tasks (45 min)</h4>
+        <ul class="tasks"><li><b>Problem analysis (10):</b> classification &mdash; but what are the
+          fairness implications?</li>
+          <li><b>Technique comparison (15):</b> accuracy and bias across approaches</li>
+          <li><b>Build &amp; analyse (15):</b> feature importance and demographic correlations</li>
+          <li><b>Ethical assessment (5):</b> fairness and regulatory compliance</li></ul></div>
+      <div class="box"><h4>Workflow starters</h4>
+        <p class="mono">[File] &rarr; [Data Sampler] &rarr; [Tree, SVM, kNN] &rarr; [Test &amp; Score] + [Confusion Matrix]</p>
+        <p class="mono" style="margin-top:6px;">[File] &rarr; [Rank] &rarr; [Data Table]</p>
+        <p class="mono" style="margin-top:6px;">[File] &rarr; [Select Columns] &rarr; [Scatter Plot]</p>
+        <p style="margin-top:8px;">Use the scatter plot to check score behaviour across
+          demographic groups &mdash; the bias check matters more than the accuracy number.</p></div>
+      <div class="box"><h4>Pitch deliverables</h4>
+        <ul class="checklist"><li>Technique recommendation for accuracy <i>and</i> fairness</li>
+          <li>Bias analysis &mdash; how protected groups are protected</li>
+          <li>Performance comparison across techniques</li>
+          <li>Regulatory compliance story</li>
+          <li>Competitive advantage argument</li></ul></div>
+    </div>
+    <p class="note" style="margin-top:12px;"><b>Facilitator angle:</b> an 8% default base rate
+       means "always approve" scores 92% &mdash; the accuracy headline is a trap. Connect to
+       <b>threshold-dial</b> and <b>k-anonymity</b>.</p>
+  </div>
+
+  <!-- RETAIL -->
+  <div class="card details" id="d-retail">
+    <h2>&#128722; National Supermarket Chain &mdash; dynamic pricing optimisation</h2>
+    <div class="brief">"We want AI-driven dynamic pricing like the online giants, but for
+      groceries. Prices must respond to demand, competition, inventory, and customer segments
+      &mdash; and our pricing is highly visible to customers and competitors. It has to be
+      effective and defensible."
+      <i>&mdash; Maria Rodriguez, Head of Pricing Strategy. Requirements: real-time
+      recommendations for 50,000+ products; customer trust; maximised margin.</i></div>
+    <div class="cols">
+      <div class="box"><h4>Available data (3 years, millions of transactions)</h4>
+        <ul><li>Sales: product, store, time, price point</li>
+            <li>Inventory: stock levels, shelf life, supplier costs</li>
+            <li>Competitor: rival pricing, market share</li>
+            <li>Customer: loyalty data, purchase patterns</li>
+            <li>External: weather, events, economic indicators</li>
+            <li>Target: optimal price (continuous) or price tier (low/med/high)</li></ul></div>
+      <div class="box"><h4>Team tasks (45 min)</h4>
+        <ul class="tasks"><li><b>Problem framing (10):</b> regression (price) vs classification
+          (price tier) &mdash; which serves the business?</li>
+          <li><b>Technique testing (15):</b> compare with real-time requirements in mind</li>
+          <li><b>Build &amp; evaluate (15):</b> alternative pricing models</li>
+          <li><b>Deployment strategy (5):</b> rollout across 1,000+ stores</li></ul></div>
+      <div class="box"><h4>Workflow starters</h4>
+        <p class="mono">[File] &rarr; [Data Sampler] &rarr; [Linear Regression] &rarr; [Predictions] + [Test &amp; Score]</p>
+        <p class="mono" style="margin-top:6px;">[File] &rarr; [Data Sampler] &rarr; [Tree] &rarr; [Tree Viewer] + [Test &amp; Score]</p>
+        <p class="mono" style="margin-top:6px;">[File] &rarr; [Data Sampler] &rarr; [Random Forest] &rarr; [Test &amp; Score]</p></div>
+      <div class="box"><h4>Pitch deliverables</h4>
+        <ul class="checklist"><li>Problem-type decision: regression vs classification</li>
+          <li>Technique recommendation for real-time pricing</li>
+          <li>Performance analysis with speed considered</li>
+          <li>Scaling strategy for a national chain</li>
+          <li>Customer-trust impact</li></ul></div>
+    </div>
+    <p class="note" style="margin-top:12px;"><b>Facilitator angle:</b> the framing decision
+       (continuous price vs price tier) changes everything downstream &mdash; most teams never
+       notice they chose it. Connect to <b>technique-picker</b>, scenario 1.</p>
+  </div>
+
+  <!-- MINING -->
+  <div class="card details" id="d-mining">
+    <h2>&#9935; Australian Mining Corp &mdash; equipment failure prediction</h2>
+    <div class="brief">"Equipment failure in our mines isn't just expensive &mdash; it's
+      potentially deadly. We need AI that predicts failures before they happen, but we can't
+      afford false alarms that shut operations down unnecessarily. Predictions must be accurate,
+      timely, and explainable to the maintenance teams acting on them."
+      <i>&mdash; David Kim, Operations Director. Requirements: catch real failures; control
+      false positives; explainable; reliable in harsh conditions.</i></div>
+    <div class="cols">
+      <div class="box"><h4>Available data (5 years, 200+ machines)</h4>
+        <ul><li>Sensors: temperature, vibration, pressure, electrical</li>
+            <li>Maintenance: service history, part replacements, downtime</li>
+            <li>Environment: weather, operational intensity</li>
+            <li>Fleet: age, manufacturer, model, usage patterns</li>
+            <li>Outcome: failure within next 7 days (yes/no) &mdash; <b>3% base rate</b></li></ul></div>
+      <div class="box"><h4>Team tasks (45 min)</h4>
+        <ul class="tasks"><li><b>Problem analysis (10):</b> classification with extreme cost
+          asymmetry &mdash; how do you weigh missed failures vs false alarms?</li>
+          <li><b>Technique evaluation (15):</b> reliability and explainability first</li>
+          <li><b>Test (15):</b> build models, read the confusion matrix carefully</li>
+          <li><b>Safety strategy (5):</b> AI augmenting human judgement, not replacing it</li></ul></div>
+      <div class="box"><h4>Workflow starters</h4>
+        <p class="mono">[File] &rarr; [Data Sampler] &rarr; [Tree] &rarr; [Tree Viewer] + [Confusion Matrix]</p>
+        <p class="mono" style="margin-top:6px;">[File] &rarr; [Data Sampler] &rarr; [Random Forest] &rarr; [Test &amp; Score] + [Confusion Matrix]</p>
+        <p style="margin-top:8px;">The confusion matrix is the whole assessment: false negatives
+          are dangerous, false positives are expensive. A 97% accuracy headline can hide every
+          failure.</p></div>
+      <div class="box"><h4>Pitch deliverables</h4>
+        <ul class="checklist"><li>Technique selection: accuracy vs explainability balance</li>
+          <li>Safety analysis: minimise false negatives, control false positives</li>
+          <li>Confusion matrix analysis with error costs</li>
+          <li>How maintenance teams use the predictions</li>
+          <li>Human&ndash;AI interaction: augmentation, not replacement</li></ul></div>
+    </div>
+    <p class="note" style="margin-top:12px;"><b>Facilitator angle:</b> a 3% failure rate makes
+       this threshold-dial's argument with lives attached &mdash; 97% accuracy by predicting
+       "never fail" hides every real failure. Also ask: what's missing from five years of
+       "complete" records? (Compare <b>technique-picker</b>, scenario 5.)</p>
+  </div>
+
+  <!-- PITCH GUIDE -->
+  <div class="card">
+    <h3>Pitches</h3>
+    <p class="note" style="margin-bottom:12px;">Each team: <b>3 minutes presentation + 1 minute
+       questions.</b></p>
+    <div class="cols">
+      <div class="box"><h4>Pitch structure</h4>
+        <ul><li><b>30s</b> &mdash; the business problem</li>
+            <li><b>60s</b> &mdash; the technique decision and why</li>
+            <li><b>60s</b> &mdash; evidence: workflows and results</li>
+            <li><b>30s</b> &mdash; business impact</li></ul></div>
+      <div class="box"><h4>What good looks like</h4>
+        <ul><li><b>Clear business logic</b> &mdash; why this technique fits this problem</li>
+            <li><b>Trade-off analysis</b> &mdash; accuracy vs interpretability vs implementation</li>
+            <li><b>Evidence</b> &mdash; workflows and results that support the call</li>
+            <li><b>Professional communication</b> &mdash; technical concepts for business
+                stakeholders</li></ul></div>
+      <div class="box"><h4>Debrief points</h4>
+        <ul><li>Different business contexts demand different techniques &mdash; there is no
+              default</li>
+            <li>Rarely one correct answer; the defence is the deliverable</li>
+            <li>Connect forward: <b>k-means-stepper</b> (clustering),
+                <b>perceptron</b> (mechanics), <b>threshold-dial</b> (error costs)</li>
+            <li>The durable skill: requirement analysis and technology selection, explained to
+                non-technical stakeholders</li></ul></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+
+document.querySelectorAll(".scard").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const on = btn.getAttribute("aria-pressed") === "true";
+    document.querySelectorAll(".scard").forEach(b => b.setAttribute("aria-pressed", "false"));
+    document.querySelectorAll(".details").forEach(d => d.classList.remove("open"));
+    if(!on){
+      btn.setAttribute("aria-pressed", "true");
+      $("d-" + btn.dataset.t).classList.add("open");
+    }
+  });
+});
+
+let left = 60 * 60, ticking = null;
+function paint(){
+  const m = Math.floor(left / 60), s = left % 60;
+  $("clock").textContent = m + ":" + String(s).padStart(2, "0");
+}
+$("start").addEventListener("click", () => {
+  if(ticking){ clearInterval(ticking); ticking = null; $("start").textContent = "Resume"; return; }
+  $("start").textContent = "Pause";
+  ticking = setInterval(() => {
+    left = Math.max(0, left - 1); paint();
+    if(left === 0){ clearInterval(ticking); ticking = null; $("start").textContent = "Time"; }
+  }, 1000);
+});
+$("reset").addEventListener("click", () => {
+  if(ticking){ clearInterval(ticking); ticking = null; }
+  left = 60 * 60; paint(); $("start").textContent = "Start timer";
+});
+
+if(new URLSearchParams(location.search).has("present")) document.body.classList.add("present");
+</script>
+</body>
+</html>

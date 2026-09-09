@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Technique Picker: the question picks the model</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111a2e; --panel2:#0e1626; --line:#22304d;
+    --ink:#e6edf7; --muted:#93a4c3;
+    --accent:#fbbf24; --good:#34d399; --warn:#fbbf24; --bad:#f87171;
+    --user:#2dd4bf; --system:#a78bfa;
+    --fs:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(1200px 800px at 30% -10%, #16223c 0%, var(--bg) 55%);
+    color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:var(--fs); min-height:100vh; padding:20px clamp(14px,3vw,28px) 40px;
+  }
+  body.present{--fs:20px;}
+  header,main,footer{max-width:860px; margin-left:auto; margin-right:auto;}
+  header{margin-bottom:14px;}
+  h1{font-size:1.45em; letter-spacing:.3px;}
+  h1 span{color:var(--accent);}
+  .sub{color:var(--muted); font-size:.85em; margin-top:6px; max-width:72ch; line-height:1.55;}
+  .prog{height:6px; background:var(--panel2); border:1px solid var(--line); border-radius:99px;
+        margin-bottom:14px; overflow:hidden;}
+  .prog i{display:block; height:100%; width:0; background:var(--user); transition:width .4s;}
+  .count{font-size:.75em; color:var(--muted); margin-bottom:14px;
+         font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px;
+        padding:16px 18px; margin-bottom:14px;}
+  h3{font-size:.72em; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted);
+     margin-bottom:10px;}
+  .brief{background:var(--panel2); border-left:3px solid var(--user); border-radius:0 10px 10px 0;
+         padding:12px 14px; font-size:.88em; line-height:1.6; margin-bottom:14px;}
+  .brief i{color:var(--muted); font-style:normal; font-size:.78em; display:block; margin-top:8px;}
+  .q{font-weight:600; margin-bottom:12px; font-size:.92em;}
+  .opts{display:grid; gap:8px;}
+  .opt{background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+       padding:11px 13px; text-align:left; color:var(--ink); cursor:pointer; font-size:.85em;
+       line-height:1.5; font-family:inherit;}
+  .opt:hover{border-color:#3b82f6;}
+  .opt b{color:var(--accent); font-weight:700; margin-right:4px;}
+  .opt.good{border-color:#34d39966; background:#34d39915;}
+  .opt.badpick{border-color:#f8717166; background:#f8717115;}
+  .opt:disabled{cursor:default;}
+  .opt:disabled:hover{border-color:var(--line);}
+  .fb{margin-top:12px; border-radius:10px; padding:12px 14px; font-size:.84em;
+      line-height:1.6; display:none;}
+  .fb.show{display:block;}
+  .fb.good{background:#34d39915; border:1px solid #34d39955;}
+  .fb.warnfb{background:#f8717115; border:1px solid #f8717155;}
+  .fb b{font-weight:700;}
+  .fb .why{color:var(--ink); margin-top:6px;}
+  .fb .ins{color:var(--muted); margin-top:6px;}
+  .fb .ins b{color:var(--user);}
+  .next{margin-top:14px; width:100%; background:var(--panel2); border:1px solid var(--line);
+        color:var(--ink); border-radius:10px; padding:11px; font-size:.9em; font-weight:700;
+        cursor:pointer;}
+  .next:hover:not(:disabled){border-color:#3b82f6;}
+  .next:disabled{opacity:.45; cursor:not-allowed;}
+  .note{font-size:.82em; color:var(--muted); line-height:1.6;}
+  .principles{display:grid; gap:10px; margin-top:6px;}
+  .pr{background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+      padding:11px 13px; font-size:.84em; line-height:1.55;}
+  .pr b{color:var(--accent);}
+  .final{background:#fbbf2410; border:1px solid #fbbf2455; border-radius:12px;
+         padding:16px 18px; margin-bottom:14px; line-height:1.65; font-size:.9em;}
+  .final b{color:var(--warn);}
+  .score{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; color:var(--ink);}
+</style>
+</head>
+<body>
+<header>
+  <h1>Technique Picker: <span>the question picks the model</span></h1>
+  <p class="sub">Five clients. Five briefs. There is no default technique &mdash; pick the one the
+     question and its constraints demand, then defend it. About five minutes.</p>
+</header>
+
+<div class="prog"><i id="prog"></i></div>
+<div class="count" id="count">scenario 1 of 5</div>
+<main>
+
+  <!-- 1 -->
+  <div class="card" id="sc1">
+    <h3>Problem type</h3>
+    <div class="brief">A major bank wants AI to set loan amounts for approved applicants.
+      They hold years of customer profiles and the actual amounts granted.
+      <i>&mdash; client brief, national bank</i></div>
+    <p class="q">What kind of machine-learning problem have they got?</p>
+    <div class="opts">
+      <button class="opt"><b>A.</b> Classification &mdash; it is a banking decision</button>
+      <button class="opt"><b>B.</b> Regression &mdash; it predicts a continuous amount</button>
+      <button class="opt"><b>C.</b> Clustering &mdash; group similar customers first</button>
+      <button class="opt"><b>D.</b> Neither &mdash; rules-based systems only</button>
+    </div>
+    <div class="fb" role="status" aria-live="polite">
+      <b>B. Regression.</b>
+      <p class="why">The output is a dollar amount &mdash; continuous. Banking context does not
+         make it classification; "approve/decline" would be, "how much?" is not.</p>
+      <p class="ins"><b>Consultant's rule:</b> when the business question is "how much?",
+         think regression. "Which category?" &mdash; classification.</p>
+    </div>
+    <button class="next" disabled>Next client</button>
+  </div>
+
+  <!-- 2 -->
+  <div class="card" id="sc2" hidden>
+    <h3>Explainability is the requirement</h3>
+    <div class="brief">A hospital network wants to flag patients at high risk of readmission.
+      "Any recommendations must be explainable to our medical staff and auditable for
+      regulatory compliance."
+      <i>&mdash; client brief, Chief Medical Officer</i></div>
+    <p class="q">Which technique do you recommend?</p>
+    <div class="opts">
+      <button class="opt"><b>A.</b> SVM &mdash; top accuracy on clinical data</button>
+      <button class="opt"><b>B.</b> Decision tree &mdash; transparent if-then rules</button>
+      <button class="opt"><b>C.</b> Random forest &mdash; best raw predictive performance</button>
+      <button class="opt"><b>D.</b> k-NN &mdash; recommend by similar past patients</button>
+    </div>
+    <div class="fb" role="status" aria-live="polite">
+      <b>B. Decision tree.</b>
+      <p class="why">When decisions must be explained to clinicians, patients, and regulators,
+         interpretability outranks small accuracy gains. A tree's if-then rules can be read,
+         challenged, and audited.</p>
+      <p class="ins"><b>Consultant's rule:</b> in regulated, high-stakes settings, a model nobody
+         can interrogate is a liability, whatever its accuracy.</p>
+    </div>
+    <button class="next" disabled>Next client</button>
+  </div>
+
+  <!-- 3 -->
+  <div class="card" id="sc3" hidden>
+    <h3>Many features</h3>
+    <div class="brief">An e-commerce platform wants to classify thousands of product reviews as
+      positive or negative. The dataset is large and wide: word frequencies, sentiment scores,
+      review length, and more.</div>
+    <p class="q">What matters most in the technique you pick?</p>
+    <div class="opts">
+      <button class="opt"><b>A.</b> Local similarity (k-NN) &mdash; match each review to similar ones</button>
+      <button class="opt"><b>B.</b> High-dimensional handling (SVM) &mdash; built for wide feature spaces</button>
+      <button class="opt"><b>C.</b> Simple interpretable rules (tree) &mdash; see why each review counts</button>
+      <button class="opt"><b>D.</b> Ensemble power (random forest) &mdash; maximise accuracy</button>
+    </div>
+    <div class="fb" role="status" aria-live="polite">
+      <b>B. SVM.</b>
+      <p class="why">Hundreds of text-derived features make this a classic high-dimensional
+         problem, and SVMs are built to find separating boundaries in exactly that geometry.</p>
+      <p class="ins"><b>Consultant's rule:</b> the shape of the data (wide, sparse, text-like)
+         narrows the shortlist before accuracy is even discussed.</p>
+    </div>
+    <button class="next" disabled>Next client</button>
+  </div>
+
+  <!-- 4 -->
+  <div class="card" id="sc4" hidden>
+    <h3>Accuracy and insight, both</h3>
+    <div class="brief">A retail chain wants to predict customer lifetime value to allocate its
+      marketing budget. It needs accurate numbers, and the marketing team also wants to know
+      <i>which factors</i> are driving the prediction.</div>
+    <p class="q">How do you balance the competing requirements?</p>
+    <div class="opts">
+      <button class="opt"><b>A.</b> Single decision tree &mdash; maximum interpretability</button>
+      <button class="opt"><b>B.</b> Random forest + feature importance &mdash; accuracy plus drivers</button>
+      <button class="opt"><b>C.</b> Separate models &mdash; one for prediction, one for explanation</button>
+      <button class="opt"><b>D.</b> Linear regression &mdash; simplest to explain</button>
+    </div>
+    <div class="fb" role="status" aria-live="polite">
+      <b>B. Random forest with feature importance.</b>
+      <p class="why">The ensemble carries the accuracy; feature importance hands the marketing
+         team the drivers. Both requirements, one model.</p>
+      <p class="ins"><b>Consultant's rule:</b> when the client wants reliable predictions
+         <i>and</i> to understand them, ensembles with importance analysis are the usual
+         compromise &mdash; not the most accurate model, and not the most transparent one.</p>
+    </div>
+    <button class="next" disabled>Next client</button>
+  </div>
+
+  <!-- 5 -->
+  <div class="card" id="sc5" hidden>
+    <h3>Check the data first</h3>
+    <div class="brief">A mining company wants to predict equipment failure. The data: sensor
+      readings updated hourly, two years of complete maintenance records &mdash; but only from
+      machines that have <b>not</b> failed. Failed machines were replaced and their records
+      left the fleet.
+      <i>&mdash; client brief, Operations Director: "lives depend on catching real failures,
+      but false alarms shut us down unnecessarily."</i></div>
+    <p class="q">What is the biggest data concern to raise with the client?</p>
+    <div class="opts">
+      <button class="opt"><b>A.</b> Timeliness &mdash; hourly sensor updates may be too slow</button>
+      <button class="opt"><b>B.</b> Volume &mdash; two years of history is not enough</button>
+      <button class="opt"><b>C.</b> Sampling bias &mdash; the failed machines are exactly what is missing</button>
+      <button class="opt"><b>D.</b> Sensor coverage &mdash; some equipment types lack sensors</button>
+    </div>
+    <div class="fb" role="status" aria-live="polite">
+      <b>C. Sampling bias &mdash; the textbook survivorship trap.</b>
+      <p class="why">The model is asked to predict failure from data that only contains
+         non-failures. There are no examples of what failure looks like. The dataset's biggest
+         gap is precisely the outcome you are being paid to predict.</p>
+      <p class="ins"><b>Consultant's rule:</b> before choosing a technique, check the data
+         represents the full range of outcomes &mdash; especially the negatives. A technique
+         chosen over missing data inherits the gap.</p>
+    </div>
+    <button class="next" disabled>See the principles</button>
+  </div>
+
+  <!-- final -->
+  <div class="card" id="fin" hidden>
+    <h3>What just happened</h3>
+    <div class="final">
+      <p>Five clients, five different right answers &mdash; same toolkit. <b>There is no default
+         technique.</b> The business question (how much? vs which category?), the constraints
+         (explainability, fairness, real-time), the shape of the data (wide? biased? complete?),
+         and the stakeholder requirements picked the model every time.</p>
+    </div>
+    <h3 style="margin-top:16px;">The five rules you just used</h3>
+    <div class="principles">
+      <div class="pr"><b>1. Question type:</b> "how much?" &rarr; regression; "which category?"
+        &rarr; classification; no label &rarr; clustering, if at all.</div>
+      <div class="pr"><b>2. Stakes:</b> regulated or high-stakes &rarr; pay accuracy for
+        interpretability (trees), deliberately.</div>
+      <div class="pr"><b>3. Data shape:</b> wide/sparse/text &rarr; high-dimensional methods
+        (SVM) before exotic ones.</div>
+      <div class="pr"><b>4. Both-and:</b> accuracy <i>and</i> insight &rarr; ensembles with
+        feature importance.</div>
+      <div class="pr"><b>5. Data before model:</b> does the data contain the outcomes you are
+        predicting &mdash; including the failures?</div>
+    </div>
+    <p class="note" style="margin-top:14px;">Score: <span class="score" id="score">0/5</span>
+       &mdash; the score is trivia; the five rules are the point.
+       Want the mechanics under the predictions? Play <b>perceptron</b>. Want to see why the
+       mining data can't be trusted? That answer was <b>survivorship bias</b> &mdash; the same
+       reason overfit models flatter you in <b>overfit</b>.</p>
+  </div>
+</main>
+
+<footer>
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const N = 5;
+let cur = 0, score = 0;
+
+const RIGHT = {1:1, 2:1, 3:1, 4:1, 5:2};  // index of the correct option per card
+
+document.querySelectorAll(".card .opt").forEach((btn, i) => {
+  const card = btn.closest(".card");
+  const n = +card.id.replace("sc","");
+  btn.addEventListener("click", () => {
+    const opts = card.querySelectorAll(".opt");
+    if([...opts].some(o => o.disabled)) return;
+    const picked = [...opts].indexOf(btn);
+    const right = picked === RIGHT[n];
+    opts.forEach((o, k) => {
+      o.disabled = true;
+      if(k === RIGHT[n]) o.classList.add("good");
+      else if(o === btn) o.classList.add("badpick");
+    });
+    if(right) score++;
+    const fb = card.querySelector(".fb");
+    fb.classList.add("show", right ? "good" : "warnfb");
+    const nx = card.querySelector(".next");
+    nx.disabled = false;
+    nx.textContent = (n === N) ? "See the principles" : "Next client";
+    $("count").textContent = "scenario " + n + " of " + N;
+    $("prog").style.width = (n / N * 100) + "%";
+  });
+});
+
+document.querySelectorAll(".card .next").forEach((nx, i) => {
+  nx.addEventListener("click", () => {
+    const n = i + 1;
+    $("sc" + n).hidden = true;
+    if(n < N){
+      $("sc" + (n + 1)).hidden = false;
+      $("count").textContent = "scenario " + (n + 1) + " of " + N;
+      $("prog").style.width = ((n) / N * 100) + "%";
+    } else {
+      $("fin").hidden = false;
+      $("count").textContent = "done";
+      $("prog").style.width = "100%";
+      $("score").textContent = score + "/" + N;
+    }
+    window.scrollTo({top:0, behavior:"smooth"});
+  });
+});
+
+if(new URLSearchParams(location.search).has("present")) document.body.classList.add("present");
+</script>
+</body>
+</html>
