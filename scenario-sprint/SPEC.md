@@ -6,10 +6,9 @@ Sufficient to rebuild the toy from scratch.
 
 ## 1. What it is
 
-The collection's one **instructor-led class activity** (it openly breaks house rule 3 — not
-solo-playable). Teams of 3–5 take one of four Australian client briefs, frame the ML problem,
-select and test a technique, and defend the recommendation in a 3-minute pitch + 1 minute of
-questions. Suggested rhythm: 45 minutes team work, 15 minutes of pitches.
+A **team sprint**: 3–5 people, one 60-minute block (45 minutes of team work, 15 minutes of
+pitches). Teams take one of four Australian client briefs, frame the ML problem, select and
+test a technique, and defend the recommendation in a 3-minute pitch + 1 minute of questions.
 
 **What it teaches:** technique selection is driven by the client's constraint, not by a
 default model — and the pitch (the defence) is the deliverable. Each brief makes a different
@@ -26,7 +25,7 @@ constraint decisive.
 
 Each client block: brief quote with attribution, data inventory, 45-minute team task list,
 workflow starters (Orange Data Mining widgets, kept because they are the activity's working
-substance), pitch checklist, and a facilitator angle with cross-links
+substance), pitch checklist, and a debrief angle with cross-links
 (`technique-picker`, `threshold-dial`, `k-anonymity`, `k-means-stepper`, `perceptron`).
 
 ## 3. Mechanics
@@ -34,10 +33,10 @@ substance), pitch checklist, and a facilitator angle with cross-links
 - Scenario cards are `<button aria-pressed>` (house selected-state rule): clicking opens that
   client's detail card and closes others; clicking again closes it. Card grid reflows to one
   column on narrow screens.
-- Timer: 60:00 countdown, Start/Pause/Reset, `mm:ss` monospace display. Purely a classroom
+- Timer: 60:00 countdown, Start/Pause/Reset, `mm:ss` monospace display. Purely a session
   aid; no persistence.
 - Pitch guide card: structure (30s/60s/60s/30s), "what good looks like", debrief points with
-  forward links to related toys. Course-week references scrubbed; facilitator framing kept.
+  forward links to related toys. Debrief framing kept generic.
 - No randomness, no storage, no network.
 
 ## 4. Layout

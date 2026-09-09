@@ -26,34 +26,14 @@ in an offline lab, from a USB stick, or uploaded to an LMS as a single file. Any
 | **[Perceptron](perceptron/)** | "AI decisions are mysterious": three weights and a threshold — change a weight, flip the verdict, same data | ✅ ready |
 | **[Pattern Spotter](pattern-spotter/)** | "the data speaks for itself": three charts, and more than one confident story fits each | ✅ ready |
 | **[Technique Picker](technique-picker/)** | "there is a default AI technique": five clients, five briefs, five different right answers | ✅ ready |
-| **[Scenario Sprint](scenario-sprint/)** | "technique selection is a technical detail": four client briefs, pick and defend — instructor-led class activity | ✅ ready · class activity |
+| **[Scenario Sprint](scenario-sprint/)** | "technique selection is a technical detail": four client briefs, one 60-minute team sprint — frame it, pick it, defend it | ✅ ready |
 
 Add `?present` to any toy (e.g. `threshold-dial/?present`) to bump type sizes for a projector.
 
 **Companion:** [The Trust Tool](https://trusttool.borck.education/)
 ([repo](https://github.com/michael-borck/trust-tool)) — a drag-the-scenario 2×2 game about where
 to trust AI output. Same audience, but deliberately not a toy (multi-file, 16 scenario packs,
-remembers best scores), so it lives in its own repo and gets a card on the landing page instead.
-
-## Course mapping
-
-This repo is **course-agnostic and numbering-agnostic**; folders are named for what the toy *is*.
-The mapping lives here rather than in the folder names. Adopting these in a unit? Add a column.
-
-| Toy | Curtin ISYS6014 module |
-|---|:--:|
-| `next-token` | 01 What changed? |
-| `data-or-command` | 03 Can you tell? |
-| `overfit` | 04 What's in the data? · 11 How does it decide? |
-| `k-anonymity` | 06 Whose data is it? |
-| `k-means-stepper` | 08 What is it saying? |
-| `threshold-dial` | 09 Does it actually work? |
-| `drift-compounds` | 10 Can it do the whole job? |
-| `jevons-dial` | 12 What comes next? |
-| `perceptron` | 11 How does it decide? |
-| `pattern-spotter` | 08 What is it saying? |
-| `technique-picker` | 09 Does it actually work? |
-| `scenario-sprint` | 10 Can it do the whole job? (synthesis) |
+    remembers best scores), so it lives in its own repo and gets a card on the landing page instead.
 
 ## House rules
 

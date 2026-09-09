@@ -33,7 +33,7 @@ right/wrong, then a one-line **consultant's rule**.
 
 Course-specific framing scrubbed: "Week 6", the TUSCANE acronym (option letters became plain
 concerns: timeliness / volume / sampling bias / coverage), "Orange workshop" CTA. Client-brief
-quotes adapted from the companion class activity `scenario-sprint`.
+quotes adapted from `scenario-sprint`.
 
 ## 3. Mechanics
 
