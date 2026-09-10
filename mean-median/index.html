@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mean vs Median: who is the average?</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111a2e; --panel2:#0e1626; --line:#22304d;
+    --ink:#e6edf7; --muted:#93a4c3;
+    --accent:#fbbf24; --good:#34d399; --warn:#fbbf24; --bad:#f87171;
+    --user:#2dd4bf; --system:#a78bfa;
+    --fs:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(1200px 800px at 30% -10%, #16223c 0%, var(--bg) 55%);
+    color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:var(--fs); min-height:100vh; padding:20px clamp(14px,3vw,28px) 40px;
+  }
+  body.present{--fs:20px;}
+  header,main,footer{max-width:1000px; margin-left:auto; margin-right:auto;}
+  header{margin-bottom:14px;}
+  h1{font-size:1.45em; letter-spacing:.3px;}
+  h1 span{color:var(--accent);}
+  .sub{color:var(--muted); font-size:.85em; margin-top:6px; max-width:72ch; line-height:1.55;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px;
+        padding:16px 18px; margin-bottom:14px;}
+  h3{font-size:.72em; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted);
+     margin-bottom:10px;}
+  .strip-wrap{background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+              padding:8px 10px;}
+  svg{width:100%; height:auto; display:block; touch-action:none;}
+  .dot{fill:var(--user); opacity:.85;}
+  .dot.median{fill:var(--ink);}
+  .dot.owner{fill:var(--accent); cursor:grab;}
+  .mline{stroke:var(--system); stroke-width:2.5; stroke-dasharray:5 4;}
+  .xline{stroke:var(--line);}
+  text{font-family:inherit;}
+  .stats{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;}
+  .stat{background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+        padding:12px 14px;}
+  .stat .v{font-size:1.5em; font-weight:700;
+           font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  .stat.mean .v{color:var(--system);}
+  .stat.median .v{color:var(--good);}
+  .stat .w{font-size:.7em; color:var(--muted); margin-top:3px;}
+  .stat .moved{font-size:.72em; color:var(--muted); margin-top:6px;}
+  .stat .moved b{color:var(--warn);}
+  .ctl{margin-top:14px;}
+  .ctl label{display:flex; justify-content:space-between; font-size:.78em; color:var(--muted);
+             margin-bottom:6px;}
+  .ctl label b{color:var(--accent); font-size:1.1em;
+               font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  input[type=range]{width:100%; accent-color:#fbbf24;}
+  .note{font-size:.82em; color:var(--muted); line-height:1.6;}
+  .note b{color:var(--ink);}
+  .wait{margin-top:14px; background:#fbbf2410; border:1px solid #fbbf2455; border-radius:10px;
+        padding:13px 15px; font-size:.86em; line-height:1.65;}
+  .wait b{color:var(--warn);}
+  .wait p{margin-bottom:9px;}
+  .wait p:last-child{margin-bottom:0;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Mean vs Median: <span>who is the average?</span></h1>
+  <p class="sub">Twenty-one people work in this building. Twenty of them earn a normal wage.
+     One of them owns the place. Drag the owner's pay and watch which number follows the
+     money &mdash; and which one follows the people.</p>
+</header>
+
+<main>
+  <div class="card">
+    <h3>Salaries (thousands $)</h3>
+    <div class="strip-wrap">
+      <svg id="plot" viewBox="0 0 1000 190" role="img"
+           aria-label="Dot strip of 21 salaries on a number line from 0 to 2 million. A purple
+           line marks the mean and follows the owner's pay; a green line marks the median and
+           barely moves."></svg>
+    </div>
+    <div class="stats">
+      <div class="stat mean">
+        <div class="v" id="meanV">--</div>
+        <div class="w">MEAN &mdash; add everything up, divide by 21</div>
+        <div class="moved">moved: <b id="meanMoved">$0K</b> since you started</div>
+      </div>
+      <div class="stat median">
+        <div class="v" id="medV">--</div>
+        <div class="w">MEDIAN &mdash; the 11th person when everyone lines up</div>
+        <div class="moved">moved: <b id="medMoved">$0K</b> since you started</div>
+      </div>
+    </div>
+    <div class="ctl">
+      <label>the owner's pay <b id="ownV">$260K</b></label>
+      <input type="range" id="owner" min="40" max="2000" value="260" step="5">
+    </div>
+    <p class="note">Or drag the amber dot directly. The purple line is the <b>mean</b>: everything
+       added up, divided by 21. The green flag is the <b>median</b>: the middle person in the
+       queue &mdash; ten people earn below, ten above.</p>
+  </div>
+
+  <div class="card">
+    <h3>The wait, what?</h3>
+    <div class="wait">
+      <p>Drag the owner past a million. The mean blew past every actual person in the building
+         &mdash; the &ldquo;average salary&rdquo; now describes <b>nobody</b>. The median didn't
+         blink: move the boss from $260K to $2M and the middle person's wage changes by exactly
+         zero.</p>
+      <p>Neither number is lying. They answer different questions. <b>The mean adds the total and
+         shares it equally</b> &mdash; useful if you're dividing the bill. <b>The median points at
+         a person</b> &mdash; useful if you're describing them. When a headline says
+         &ldquo;average pay rose,&rdquo; the first question is: <b>which average, and whose money
+         moved?</b></p>
+    </div>
+  </div>
+</main>
+
+<footer>
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const W = 1000, H = 190, PADL = 40, PADR = 20, MAX = 2000;
+const staff = [38,42,45,47,50,52,55,58,60,62,65,68,72,78,85,92,105,118,135,160];
+const X = v => PADL + (v/MAX)*(W-PADL-PADR);
+
+const svg = $("plot");
+let ownerPay = 260;
+const baseMean = (staff.reduce((a,b)=>a+b,0) + ownerPay) / 21;
+
+function sorted(){ return [...staff, ownerPay].sort((a,b)=>a-b); }
+
+function render(){
+  const s = sorted();
+  const mean = s.reduce((a,b)=>a+b,0)/21;
+  const median = s[10];
+
+  let dots = "";
+  s.forEach((v, i) => {
+    const isMed = i === 10, isOwner = v === ownerPay && !s.slice(0,i).includes(ownerPay) && ownerPay !== staff.some(x=>x===ownerPay);
+    // owner = the value driven by the slider; mark the last occurrence in sorted order
+    const cls = "dot" + (isMed ? " median" : "") + (i === 20 && v === ownerPay ? " owner" : "");
+    const row = (i % 2 === 0) ? 92 : 122;
+    dots += `<circle class="${cls}" cx="${X(v).toFixed(1)}" cy="${row}" r="9"/>`;
+  });
+
+  svg.innerHTML =
+    [0,250,500,750,1000,1250,1500,1750,2000].map(v =>
+      `<line class="xline" x1="${X(v)}" y1="30" x2="${X(v)}" y2="160"/>` +
+      `<text x="${X(v)}" y="180" text-anchor="middle" font-size="17" fill="#93a4c3">${v>=1000?(v/1000)+"M":v+"K"}</text>`
+    ).join("") +
+    dots +
+    `<line class="mline" x1="${X(mean)}" y1="18" x2="${X(mean)}" y2="165"/>
+     <text x="${X(mean)}" y="12" text-anchor="middle" font-size="19" fill="#a78bfa" font-weight="700">MEAN</text>
+     <line x1="${X(median)-1}" y1="42" x2="${X(median)-1}" y2="165" stroke="#34d399" stroke-width="2.5"/>
+     <text x="${X(median)}" y="34" text-anchor="middle" font-size="19" fill="#34d399" font-weight="700">MEDIAN</text>`;
+
+  $("meanV").textContent = "$" + Math.round(mean) + "K";
+  $("medV").textContent  = "$" + median + "K";
+  $("meanMoved").textContent = (mean - baseMean >= 0 ? "+$" : "-$") + Math.abs(Math.round(mean - baseMean)) + "K";
+  $("medMoved").textContent  = (median - 65 >= 0 ? "+$" : "-$") + Math.abs(median - 65) + "K";
+  $("ownV").textContent = "$" + ownerPay + "K";
+}
+
+// slider
+$("owner").addEventListener("input", e => { ownerPay = +e.target.value; render(); });
+
+// drag the amber dot
+let dragging = false;
+function pos(evt){
+  const r = svg.getBoundingClientRect();
+  const px = (evt.clientX - r.left) / r.width * W;
+  return Math.round(Math.max(40, Math.min(2000, (px - PADL) / (W-PADL-PADR) * MAX)) / 5) * 5;
+}
+svg.addEventListener("pointerdown", e => {
+  dragging = true;
+  svg.setPointerCapture(e.pointerId);
+  ownerPay = pos(e); $("owner").value = ownerPay; render();
+});
+svg.addEventListener("pointermove", e => {
+  if(!dragging) return;
+  ownerPay = pos(e); $("owner").value = ownerPay; render();
+});
+svg.addEventListener("pointerup", () => dragging = false);
+svg.addEventListener("pointerleave", () => dragging = false);
+
+if(new URLSearchParams(location.search).has("present")) document.body.classList.add("present");
+render();
+</script>
+</body>
+</html>

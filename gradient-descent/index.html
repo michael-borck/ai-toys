@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gradient Descent: training is just rolling downhill</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111a2e; --panel2:#0e1626; --line:#22304d;
+    --ink:#e6edf7; --muted:#93a4c3;
+    --accent:#fbbf24; --good:#34d399; --warn:#fbbf24; --bad:#f87171;
+    --user:#2dd4bf; --system:#a78bfa;
+    --fs:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(1200px 800px at 30% -10%, #16223c 0%, var(--bg) 55%);
+    color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:var(--fs); min-height:100vh; padding:20px clamp(14px,3vw,28px) 40px;
+  }
+  body.present{--fs:20px;}
+  header,main,footer{max-width:1000px; margin-left:auto; margin-right:auto;}
+  header{margin-bottom:14px;}
+  h1{font-size:1.45em; letter-spacing:.3px;}
+  h1 span{color:var(--accent);}
+  .sub{color:var(--muted); font-size:.85em; margin-top:6px; max-width:76ch; line-height:1.55;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px;
+        padding:16px 18px; margin-bottom:14px;}
+  h3{font-size:.72em; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted);
+     margin-bottom:10px;}
+  .plotwrap{background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+            padding:6px;}
+  svg{width:100%; height:auto; display:block; touch-action:none; user-select:none;
+      cursor:crosshair;}
+  text{font-family:inherit;}
+  .curve{stroke:var(--system); stroke-width:3; fill:none;}
+  .trail{fill:var(--accent); opacity:.45;}
+  .ball{fill:var(--warn); stroke:#0b1220; stroke-width:2.5;}
+  .vline{stroke-dasharray:4 4; stroke-width:1.5;}
+  .note{font-size:.82em; color:var(--muted); line-height:1.6;}
+  .note b{color:var(--ink);}
+  .ctl{margin-top:12px;}
+  .ctl label{display:flex; justify-content:space-between; font-size:.78em; color:var(--muted);
+             margin-bottom:5px;}
+  .ctl label b{color:var(--user); font-size:1.1em;
+               font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  input[type=range]{width:100%; accent-color:#2dd4bf;}
+  .btns{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
+  .btn{flex:1 1 110px; background:var(--panel2); border:1px solid var(--line); color:var(--ink);
+       border-radius:10px; padding:11px; font-size:.88em; font-weight:700; cursor:pointer;
+       font-family:inherit;}
+  .btn:hover:not(:disabled){border-color:#3b82f6;}
+  .btn:disabled{opacity:.45; cursor:not-allowed;}
+  .readout{display:flex; gap:12px; flex-wrap:wrap; margin-top:14px;}
+  .rbox{background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+        padding:10px 13px; flex:1 1 130px;}
+  .rbox .k{font-size:.68em; text-transform:uppercase; letter-spacing:1px; color:var(--muted);}
+  .rbox .v{font-size:1.15em; font-weight:700; margin-top:3px;
+           font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  .band{margin-top:12px; border-radius:10px; padding:12px 14px; font-size:.88em;
+        line-height:1.5; display:none;}
+  .band.show{display:block;}
+  .band.good{background:#34d39915; border:1px solid #34d39955; color:var(--good);}
+  .band.warnfb{background:#fbbf2410; border:1px solid #fbbf2455; color:var(--warn);}
+  .band.bad{background:#f8717115; border:1px solid #f8717155; color:var(--bad);}
+  .wait{margin-top:14px; background:#fbbf2410; border:1px solid #fbbf2455; border-radius:10px;
+        padding:13px 15px; font-size:.86em; line-height:1.65;}
+  .wait b{color:var(--warn);}
+  .wait p{margin-bottom:9px;}
+  .wait p:last-child{margin-bottom:0;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Gradient Descent: <span>training is just rolling downhill</span></h1>
+  <p class="sub">The curve is the model's <b>error</b> at each setting of one dial. Training
+     measures the slope, steps the dial the other way, repeats. Click anywhere on the curve to
+     drop the ball, pick a step size, and watch where &ldquo;learning&rdquo; actually lands.</p>
+</header>
+
+<main>
+  <div class="card">
+    <div class="plotwrap">
+      <svg id="plot" viewBox="0 0 900 380" role="img" aria-label="Error curve with two valleys:
+        a shallow one on the right and a deep one on the left. The ball rolls against the slope
+        and settles in a valley; where it lands depends on where it started and the step size."></svg>
+    </div>
+    <p class="note" style="margin-top:10px;">Click the curve to <b>drop the ball</b> anywhere.
+       There are two valleys: the shallow one on the right and the deep one on the left. The
+       ball does not know which is which &mdash; it only ever checks the slope under its feet.</p>
+    <div class="readout">
+      <div class="rbox"><div class="k">position (w)</div><div class="v" id="wV">--</div></div>
+      <div class="rbox"><div class="k">error (loss)</div><div class="v" id="lV">--</div></div>
+      <div class="rbox"><div class="k">steps taken</div><div class="v" id="sV">0</div></div>
+      <div class="rbox"><div class="k">last step size</div><div class="v" id="dV">--</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Controls</h3>
+    <div class="ctl"><label>learning rate (step size) <b id="lrV">1.0</b></label>
+      <input type="range" id="lr" min="0.05" max="2.5" value="1" step="0.05"></div>
+    <div class="btns">
+      <button class="btn" id="stepBtn">Take one step</button>
+      <button class="btn" id="runBtn">Run</button>
+      <button class="btn" id="dropBtn">Drop ball at start</button>
+      <button class="btn" id="clearBtn">Clear trail</button>
+    </div>
+    <div class="band" id="verdict" role="status" aria-live="polite"></div>
+  </div>
+
+  <div class="card">
+    <h3>The wait, what?</h3>
+    <div class="wait">
+      <p>Nothing in that animation <b>understood</b> anything. The ball checks one number
+         &mdash; the slope under its feet &mdash; and steps the other way. That is the entire
+         training loop of modern AI: measure the error, step against the slope, millions of
+         times, on millions of dials at once.</p>
+      <p>And notice the two ways it fails. Drop the ball on the right slope and it settles
+         <b>happily in the shallow valley</b> &mdash; a real answer, just not the best one; the
+         ball has no idea a deeper valley exists. Crank the learning rate and it <b>bounces
+         straight out of the valley</b> or flies off the board entirely.</p>
+      <p>Where training lands is an accident of <b>where it started</b> and <b>how big a step it
+         takes</b> &mdash; not of the model knowing the right answer. Same curve, same rules,
+         different landing every time.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const W=900, H=380, PL=50, PR=18, PT=20, PB=40;
+const WMIN=0, WMAX=10;
+
+// Error landscape authored as control points (w, loss), smoothly interpolated.
+// Deep valley (global) at w=2.2, loss 2.2; shallow valley at w=7.6, loss 5.8.
+const CP = [[0,5.2],[1,7.4],[2.2,2.2],[3.6,4.8],[5,9.6],[6.4,6.6],[7.6,5.8],[9,7.8],[10,9.4]];
+const DEEP = {w:2.2, loss:2.2}, SHALLOW = {w:7.6, loss:5.8};
+
+function curveY(w){
+  let i = 0;
+  while(i < CP.length-2 && w > CP[i+1][0]) i++;
+  const [x0,y0] = CP[Math.max(0,i-1)], [x1,y1] = CP[i],
+        [x2,y2] = CP[i+1], [x3,y3] = CP[Math.min(CP.length-1,i+2)];
+  const t = Math.max(0, Math.min(1, (w-x1)/(x2-x1))), t2 = t*t, t3 = t2*t;
+  return 0.5*((2*y1) + (-y0+y2)*t + (2*y0-5*y1+4*y2-y3)*t2 + (-y0+3*y1-3*y2+y3)*t3);
+}
+const EPS = 1e-3;
+const grad = w => (curveY(w+EPS)-curveY(w-EPS))/(2*EPS);
+const STEP_SCALE = 0.16;   // step = lr * grad * STEP_SCALE
+
+const X = w => PL + (w-WMIN)/(WMAX-WMIN)*(W-PL-PR);
+const Y = l => H-PB - l/11*(H-PT-PB);
+
+let w = 8.8, lr = 1.0, steps = 0, trail = [], running = null;
+
+function curvePath(){
+  let d = "";
+  for(let i=0;i<=260;i++){
+    const ww = WMIN + i/260*(WMAX-WMIN);
+    d += (i? " L ":"M ") + X(ww).toFixed(2) + " " + Y(curveY(ww)).toFixed(2);
+  }
+  return d;
+}
+
+function render(){
+  const marks =
+    `<line class="vline" x1="${X(DEEP.w)}" y1="${Y(DEEP.loss)}" x2="${X(DEEP.w)}" y2="${Y(0)}" stroke="#34d39955"/>` +
+    `<text x="${X(DEEP.w)}" y="${H-12}" text-anchor="middle" font-size="14" fill="#34d399">deep valley (best)</text>` +
+    `<line class="vline" x1="${X(SHALLOW.w)}" y1="${Y(SHALLOW.loss)}" x2="${X(SHALLOW.w)}" y2="${Y(0)}" stroke="#fbbf2455"/>` +
+    `<text x="${X(SHALLOW.w)}" y="${H-12}" text-anchor="middle" font-size="14" fill="#fbbf24">shallow valley</text>`;
+  const tr = trail.map(t => `<circle class="trail" cx="${X(t.w)}" cy="${Y(curveY(t.w))}" r="5"/>`).join("");
+  const ball = `<circle class="ball" cx="${X(w)}" cy="${Y(curveY(w))}" r="12"/>`;
+  $("plot").innerHTML = curvePath() + marks + tr + ball;
+  $("wV").textContent = w.toFixed(2);
+  $("lV").textContent = curveY(w).toFixed(2);
+  $("sV").textContent = steps;
+  $("dV").textContent = trail.length ? Math.abs(w - trail[trail.length-1].w).toFixed(2) : "--";
+}
+
+function judge(){
+  const v = $("verdict");
+  v.classList.remove("good","warnfb","bad");
+  if(w < WMIN - 0.01 || w > WMAX + 0.01){
+    w = Math.max(-0.4, Math.min(10.4, w));
+    v.classList.add("bad","show");
+    v.textContent = "DIVERGED — the steps were so big the ball flew off the landscape. " +
+      "Training didn't fail because the model is bad; the step size was.";
+    stopRun();
+    return true;
+  }
+  if(trail.length && Math.abs(w - trail[trail.length-1].w) < 0.004){
+    if(Math.abs(w - DEEP.w) < 0.5){
+      v.classList.add("good","show");
+      v.textContent = "Settled in the DEEP valley (w ≈ " + w.toFixed(2) + ", error ≈ " +
+        curveY(w).toFixed(1) + "). The best answer on the board.";
+    } else {
+      v.classList.add("warnfb","show");
+      v.textContent = "Settled in the SHALLOW valley (w ≈ " + w.toFixed(2) + ", error ≈ " +
+        curveY(w).toFixed(1) + "). The ball is content — it cannot see the deep valley at " +
+        "w ≈ 2.2, sitting at less than half this error. Same model, same data, worse answer.";
+    }
+    stopRun();
+    return true;
+  }
+  return false;
+}
+
+function stepOnce(){
+  if($("verdict").classList.contains("show")) return;
+  trail.push({w});
+  w = w - lr * grad(w) * STEP_SCALE;
+  steps++;
+  render();
+  judge();
+}
+function stopRun(){
+  $("runBtn").textContent = "Run";
+  if(running){ clearInterval(running); running = null; }
+}
+
+$("lr").addEventListener("input", e => { lr = +e.target.value; $("lrV").textContent = lr.toFixed(2); });
+$("stepBtn").addEventListener("click", () => { stopRun(); stepOnce(); });
+$("runBtn").addEventListener("click", () => {
+  if(running){ stopRun(); return; }
+  $("verdict").className = "band";
+  running = setInterval(stepOnce, 420);
+  $("runBtn").textContent = "Pause";
+});
+$("dropBtn").addEventListener("click", () => {
+  stopRun(); w = 8.8; steps = 0; trail = [];
+  $("verdict").className = "band";
+  render();
+});
+$("clearBtn").addEventListener("click", () => { trail = []; render(); });
+
+$("plot").addEventListener("pointerdown", e => {
+  stopRun();
+  const r = $("plot").getBoundingClientRect();
+  const px = (e.clientX - r.left)/r.width * W;
+  w = Math.max(WMIN, Math.min(WMAX, WMIN + (px-PL)/(W-PL-PR)*(WMAX-WMIN)));
+  steps = 0; trail = [];
+  $("verdict").className = "band";
+  render();
+});
+
+if(new URLSearchParams(location.search).has("present")) document.body.classList.add("present");
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Best Fit: lose to the machine</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111a2e; --panel2:#0e1626; --line:#22304d;
+    --ink:#e6edf7; --muted:#93a4c3;
+    --accent:#fbbf24; --good:#34d399; --warn:#fbbf24; --bad:#f87171;
+    --user:#2dd4bf; --system:#a78bfa;
+    --fs:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(1200px 800px at 30% -10%, #16223c 0%, var(--bg) 55%);
+    color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:var(--fs); min-height:100vh; padding:20px clamp(14px,3vw,28px) 40px;
+  }
+  body.present{--fs:20px;}
+  header,main,footer{max-width:1000px; margin-left:auto; margin-right:auto;}
+  header{margin-bottom:14px;}
+  h1{font-size:1.45em; letter-spacing:.3px;}
+  h1 span{color:var(--accent);}
+  .sub{color:var(--muted); font-size:.85em; margin-top:6px; max-width:72ch; line-height:1.55;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px;
+        padding:16px 18px; margin-bottom:14px;}
+  h3{font-size:.72em; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted);
+     margin-bottom:10px;}
+  .plotwrap{background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+            padding:6px;}
+  svg{width:100%; height:auto; display:block; touch-action:none; user-select:none;}
+  text{font-family:inherit;}
+  .pt{fill:var(--user); opacity:.95;}
+  .sq{fill:#fbbf2418; stroke:#fbbf2455; stroke-width:1;}
+  .yourline{stroke:var(--warn); stroke-width:3; stroke-linecap:round;}
+  .handle{cursor:ns-resize;}
+  .handle circle{fill:var(--warn); stroke:#0b1220; stroke-width:2.5;}
+  .handle:focus-visible circle{stroke:#3b82f6;}
+  .machine{stroke:var(--good); stroke-width:3; stroke-dasharray:9 6;}
+  .row{display:flex; gap:12px; flex-wrap:wrap; margin-top:12px;}
+  .sset{background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+        padding:12px 14px; flex:1 1 200px;}
+  .sset .k{font-size:.7em; text-transform:uppercase; letter-spacing:1.1px; color:var(--muted);}
+  .sset .v{font-size:1.25em; font-weight:700; margin-top:3px;
+           font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  .sset.you .v{color:var(--warn);}
+  .sset.best .v{color:var(--good);}
+  .sset.pen .v{color:var(--bad);}
+  .btn{margin-top:12px; background:var(--panel2); border:1px solid var(--line); color:var(--ink);
+       border-radius:10px; padding:10px 14px; font-size:.85em; font-weight:700; cursor:pointer;
+       font-family:inherit;}
+  .btn:hover{border-color:#3b82f6;}
+  .note{font-size:.82em; color:var(--muted); line-height:1.6;}
+  .note b{color:var(--ink);}
+  .wait{margin-top:14px; background:#fbbf2410; border:1px solid #fbbf2455; border-radius:10px;
+        padding:13px 15px; font-size:.86em; line-height:1.65;}
+  .wait b{color:var(--warn);}
+  .wait p{margin-bottom:9px;}
+  .wait p:last-child{margin-bottom:0;}
+  .band{margin-top:12px; border-radius:10px; padding:12px 14px; font-size:.88em;
+        line-height:1.5; display:none;}
+  .band.show{display:block;}
+  .band.good{background:#34d39915; border:1px solid #34d39955; color:var(--good);}
+</style>
+</head>
+<body>
+<header>
+  <h1>Best Fit: <span>lose to the machine</span></h1>
+  <p class="sub">Eighteen students: hours studied vs test score. Drag the amber handles to draw
+     your line of best fit. Every point grows a square &mdash; its area is that point's squared
+     error. The machine draws the one line with the <b>least total square area</b>. Try to beat it.</p>
+</header>
+
+<main>
+  <div class="card">
+    <div class="plotwrap">
+      <svg id="plot" viewBox="0 0 900 430" role="img" aria-label="Scatter plot of study hours
+        versus test score. You drag a line; each point grows a square whose area is its squared
+        error. The best line is the one with the smallest total square area."></svg>
+    </div>
+    <p class="note" style="margin-top:10px;">Drag the amber handles (or focus one and use the
+       arrow keys). Each square's <b>side</b> is that point's vertical miss; its <b>area</b> is
+       the squared error. "Best fit" means smallest total area &mdash; that is all the phrase
+       has ever meant.</p>
+  </div>
+
+  <div class="card">
+    <h3>The scoreboard</h3>
+    <div class="row">
+      <div class="sset you"><div class="k">Your total square area</div><div class="v" id="youV">--</div></div>
+      <div class="sset pen"><div class="k">Extra error vs the machine</div><div class="v" id="penV">--</div></div>
+      <div class="sset best"><div class="k">Machine's line (least squares)</div><div class="v" id="bestV">--</div></div>
+    </div>
+    <button class="btn" id="reveal">Reveal the machine's line</button>
+    <div class="band" id="beat" role="status" aria-live="polite"></div>
+  </div>
+
+  <div class="card">
+    <h3>The wait, what?</h3>
+    <div class="wait">
+      <p>A line <i>through the middle of the cloud</i> &mdash; flat, sensible-looking &mdash;
+         hides enormous squares at the ends. The machine's line often looks <b>wrong</b>: pulled
+         by the extremes, cutting through the crowd. It wins for one boring reason: when you add
+         up every square, its total area is the smallest any line can achieve.</p>
+      <p>&ldquo;Least squares&rdquo; is not a taste or an aesthetic. It is the definition of
+         <b>best</b> &mdash; and every model you will ever meet is fighting for exactly this
+         kind of shrinking area, in more dimensions than you can draw. Same game, more
+         directions.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const PTS = [
+  [1,42],[1.5,45],[2,48],[2.5,44],[3,52],[3.5,55],[4,50],[4.5,58],[5,60],
+  [5.5,57],[6,63],[6.5,66],[7,62],[7.5,70],[8,68],[8.5,74],[9,72],[9.5,78]
+];
+const W=900, H=430, PL=55, PR=20, PT=18, PB=42;
+const XMAX=10, YMIN=30, YMAX=90;
+const X = v => PL + v/XMAX*(W-PL-PR);
+const Y = v => H-PB - (v-YMIN)/(YMAX-YMIN)*(H-PT-PB);
+const iX = px => (px-PL)/(W-PL-PR)*XMAX;
+
+// least squares, closed form (deterministic)
+const n = PTS.length;
+const sx = PTS.reduce((a,p)=>a+p[0],0), sy = PTS.reduce((a,p)=>a+p[1],0);
+const sxx = PTS.reduce((a,p)=>a+p[0]*p[0],0), sxy = PTS.reduce((a,p)=>a+p[0]*p[1],0);
+const mOpt = (n*sxy - sx*sy) / (n*sxx - sx*sx);
+const bOpt = (sy - mOpt*sx) / n;
+
+let h0 = {x:0.8, y:40}, h1 = {x:9.2, y:80};   // your handles
+let showMachine = false;
+
+const svg = $("plot");
+
+function sse(yf){ return PTS.reduce((a,p)=>a + (p[1]-yf(p[0]))**2, 0); }
+const yourLine  = p => h0.y + (p[0]-h0.x)*(h1.y-h0.y)/(h1.x-h0.x);
+const machLine  = p => bOpt + mOpt*p[0];
+const optSSE = sse(machLine);
+
+function render(){
+  let g = "";
+  // axes
+  g += `<line x1="${PL}" y1="${H-PB}" x2="${W-PR}" y2="${H-PB}" stroke="#22304d" stroke-width="2"/>`;
+  g += `<line x1="${PL}" y1="${PT}" x2="${PL}" y2="${H-PB}" stroke="#22304d" stroke-width="2"/>`;
+  for(let xh=0; xh<=10; xh+=2)
+    g += `<text x="${X(xh)}" y="${H-PB+22}" text-anchor="middle" font-size="15" fill="#93a4c3">${xh} h</text>`;
+  for(let yv=40; yv<=80; yv+=20)
+    g += `<text x="${PL-8}" y="${Y(yv)+5}" text-anchor="end" font-size="15" fill="#93a4c3">${yv}</text>`;
+  g += `<text x="${W/2}" y="${H-6}" text-anchor="middle" font-size="16" fill="#93a4c3">hours studied</text>`;
+  g += `<text x="14" y="${H/2}" font-size="16" fill="#93a4c3" transform="rotate(-90 14 ${H/2})" text-anchor="middle">score</text>`;
+
+  // residual squares + points
+  for(const [px,py] of PTS){
+    const fit = yourLine(px);
+    const resid = py - fit;
+    const side = Math.abs(resid)/ (YMAX-YMIN) * (H-PT-PB);
+    const top = resid > 0 ? Y(py) : Y(fit);
+    g += `<rect class="sq" x="${X(px)-side/2}" y="${top}" width="${side}" height="${side}"/>`;
+    g += `<circle class="pt" cx="${X(px)}" cy="${Y(py)}" r="5.5"/>`;
+  }
+
+  // your line
+  g += `<line class="yourline" x1="${X(h0.x)}" y1="${Y(h0.y)}" x2="${X(h1.x)}" y2="${Y(h1.y)}"/>`;
+  for(const [h,lab] of [[h0,"A"],[h1,"B"]]){
+    g += `<g class="handle" tabindex="0" data-h="${lab}" role="slider"
+            aria-label="Handle ${lab}: line height at ${h.x.toFixed(1)} hours"
+            aria-valuemin="${YMIN}" aria-valuemax="${YMAX}" aria-valuenow="${h.y.toFixed(0)}">`;
+    g += `<circle cx="${X(h.x)}" cy="${Y(h.y)}" r="16"/>`;
+    g += `<text x="${X(h.x)}" y="${Y(h.y)+5}" text-anchor="middle" font-size="14"
+            font-weight="700" fill="#0b1220">${lab}</text></g>`;
+  }
+
+  // machine line
+  if(showMachine){
+    g += `<line class="machine" x1="${X(0)}" y1="${Y(machLine(0))}" x2="${X(10)}" y2="${Y(machLine(10))}"/>`;
+    g += `<text x="${X(9.9)}" y="${Y(machLine(9.2))-12}" text-anchor="end" font-size="16"
+            fill="#34d399" font-weight="700">machine</text>`;
+  }
+
+  svg.innerHTML = g;
+
+  const youSSE = sse(yourLine);
+  const pen = youSSE/optSSE;
+  $("youV").textContent = Math.round(youSSE).toLocaleString() + " u²";
+  $("bestV").textContent = Math.round(optSSE).toLocaleString() + " u²";
+  $("penV").textContent = pen <= 1.001 ? "none — you matched it" : "+" + Math.round((pen-1)*100) + "%";
+
+  const beat = $("beat");
+  if(pen <= 1.001){
+    beat.className = "band good show";
+    beat.textContent = "You found it — the same line least squares would. Look at the squares: " +
+      "they balance above and below, and no other line shrinks the total. That balance is the " +
+      "entire definition of \u201Cbest fit.\u201D";
+  } else {
+    beat.className = "band show";
+    beat.style.background = "#0e1626"; beat.style.border = "1px solid var(--line)";
+    beat.style.color = "var(--ink)";
+    beat.textContent = "Your line carries " + Math.round((pen-1)*100) +
+      "% more error than the machine's. Shrink the squares.";
+  }
+}
+
+// reveal machine
+$("reveal").addEventListener("click", () => { showMachine = true; render(); });
+
+// handle dragging + keyboard
+function dragTarget(e){
+  const g = e.target.closest(".handle");
+  return g ? g.dataset.h : null;
+}
+let drag = null;
+svg.addEventListener("pointerdown", e => {
+  drag = dragTarget(e);
+  if(drag) svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener("pointermove", e => {
+  if(!drag) return;
+  const r = svg.getBoundingClientRect();
+  const py = (e.clientY - r.top) / r.height * H;          // svg coords
+  const vy = YMIN + (H - PB - py) / (H - PT - PB) * (YMAX - YMIN);
+  const clamped = Math.max(YMIN, Math.min(YMAX, vy));
+  (drag === "A" ? h0 : h1).y = clamped; render();
+});
+svg.addEventListener("pointerup", () => drag = null);
+svg.addEventListener("pointerleave", () => drag = null);
+
+svg.addEventListener("keydown", e => {
+  const h = dragTarget(e);
+  if(!h) return;
+  const step = e.shiftKey ? 2 : 0.5;
+  const ref = h === "A" ? h0 : h1;
+  if(e.key === "ArrowUp"){ ref.y = Math.min(YMAX, ref.y + step); }
+  else if(e.key === "ArrowDown"){ ref.y = Math.max(YMIN, ref.y - step); }
+  else return;
+  e.preventDefault(); render();
+});
+
+if(new URLSearchParams(location.search).has("present")) document.body.classList.add("present");
+render();
+</script>
+</body>
+</html>
