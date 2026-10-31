@@ -22,9 +22,24 @@ number); the median points at the middle person (a description number). A headli
 20 staff salaries (in $K): 38, 42, 45, 47, 50, 52, 55, 58, 60, 62, 65, 68, 72, 78, 85, 92,
 105, 118, 135, 160 — plus the owner, draggable $40K–$2,000K (default 260).
 
-With the default owner pay: n = 21, median = 11th value = 65, mean = 1747/21 ≈ 83.2.
-Verified extremes: owner at 2000 → mean ≈ 166.0, median still 65; owner at 40 → mean ≈ 72.7,
-median 62 (a low owner pulls it down too — the mechanism is symmetric).
+With the default owner pay: n = 21, median = 11th value = 65, mean = 1747/21 ≈ 83.2
+(staff salaries sum to 1487).
+
+Verified across the slider's range (rebuilds must reproduce; money in $K, mean as
+displayed, i.e. rounded):
+
+| Owner pay | Mean | Median | People (of 21) above the mean |
+|---|---|---|---|
+| 40 (slider floor) | 73 | 62 | 7 |
+| 260 (default) | 83 | 65 | 7 |
+| 500 | 95 | 65 | 5 |
+| 1,000 | 118 | 65 | 3 |
+| 2,000 (slider ceiling) | 166 | 65 | 1 — the owner alone |
+
+Two landmarks: the median only moves at the bottom of the range (owner at 40 → median 62:
+a low owner pulls it down too, the mechanism is symmetric); and the mean passes the
+highest staff wage (160) once the owner passes 1,873 — from there the "average salary"
+exceeds every actual employee's pay.
 
 ## 3. Mechanics
 

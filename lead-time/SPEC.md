@@ -30,8 +30,22 @@ Screening rule, for programme start year S:
 - onset < S < death → diagnosed at S (caught at the first screen after onset)
 - S ≥ death → symptomatic diagnosis at onset + 5 (programme came too late to matter)
 
-Verified headline numbers: S = 2029 (effectively none) → mean survival ≈ 4.2 yrs, 5-year
-survival 42%; S = 2007 → mean ≈ 9.8 yrs, 100%. Deaths 2012–2030 in both worlds.
+Verified headline numbers (rebuilds must reproduce; deaths 2012–2030 at every setting):
+
+| Screening starts (S) | Mean survival after diagnosis | 5-year survival |
+|---|---|---|
+| 2029 (default; effectively none) | 4.2 yrs | 42% (5 of 12) |
+| 2025 | 4.3 yrs | 42% (5 of 12) |
+| 2020 | 3.8 yrs | 42% (5 of 12) |
+| 2015 | 7.1 yrs | 75% (9 of 12) |
+| 2010 | 9.3 yrs | 92% (11 of 12) |
+| 2007 | 9.8 yrs | 100% (12 of 12) |
+
+The dip at S = 2020 is real arithmetic under the rule above, not a typo: for patients
+whose symptom diagnosis (onset + 5) precedes the programme start, being "caught" at the
+first screen dates their diagnosis *later* than symptoms would have, shortening their
+counted survival. The endpoints carry the lesson either way: 4.2 → 9.8 years and
+42% → 100% with every death date fixed.
 
 ## 3. Mechanics
 

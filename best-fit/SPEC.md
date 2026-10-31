@@ -27,6 +27,18 @@ least-squares line often looks wrong while being unbeatable.
 Least-squares optimum computed at runtime by closed form from these points (deterministic):
 `m = (n·Σxy − Σx·Σy)/(n·Σx² − (Σx)²)`, `b = (ȳ − m·x̄)`.
 
+Verified from these points (rebuilds must reproduce): optimum **m ≈ 3.967, b ≈ 38.28**
+(the machine line runs from (0, 38.3) to (10, 78.0)).
+
+| Line | Total square area (SSE, as displayed) | Penalty vs machine |
+|---|---|---|
+| Machine (least squares) | 108 u² | — |
+| Default handles A(0.8, 40), B(9.2, 80) | 262 u² | +143% |
+| Flat at the mean score (59.1) | 2,014 u² | +1,771% |
+
+The flat line is the wait-what in numbers: the most sensible-looking line on the page
+carries nearly nineteen times the machine's error.
+
 ## 3. Mechanics
 
 - Your line = two handles A (x≈0.8) and B (x≈9.2), each a focusable `<g role="slider">` with

@@ -31,6 +31,18 @@ Dataset keys → labels: dino→Dinosaur, away→Away, h_lines→Horizontal line
 lines, x_shape→X shape, star→Star, high_lines→High lines, dots→Dots, circle→Circle,
 bullseye→Bullseye, slant_up→Slant up, slant_down→Slant down, wide_lines→Wide lines.
 
+Verified against the embedded coordinates, computed exactly as the page computes them
+(sample SD; rebuilds must reproduce):
+
+| Statistic | Displayed (1 dp, all 13 sets) | Range across the 13 sets at 2 dp |
+|---|---|---|
+| Mean of x | 54.3 | 54.26–54.27 |
+| Mean of y | 47.8 | 47.83–47.84 |
+| SD of x | 16.8 | 16.76–16.77 |
+| SD of y | 26.9 | 26.93–26.94 |
+| Correlation | −0.1 | −0.07–−0.06 |
+| Points (n) | 142 | 142 in every set |
+
 ## 3. Mechanics
 
 - Global x/y bounds computed once across all datasets so every plot shares axes (stable axes
