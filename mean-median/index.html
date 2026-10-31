@@ -128,21 +128,25 @@ const X = v => PADL + (v/MAX)*(W-PADL-PADR);
 const svg = $("plot");
 let ownerPay = 260;
 const baseMean = (staff.reduce((a,b)=>a+b,0) + ownerPay) / 21;
+const baseMed = [...staff, ownerPay].sort((a,b)=>a-b)[10];
 
-function sorted(){ return [...staff, ownerPay].sort((a,b)=>a-b); }
+/* Tag the owner's salary before sorting, so the amber dot tracks the person at any
+   pay level — by identity, not by value (which breaks on ties and below the top wage). */
+function sorted(){
+  return [...staff.map(v => ({v, owner:false})), {v:ownerPay, owner:true}]
+    .sort((a,b) => a.v - b.v);
+}
 
 function render(){
   const s = sorted();
-  const mean = s.reduce((a,b)=>a+b,0)/21;
-  const median = s[10];
+  const mean = s.reduce((a,p)=>a+p.v,0)/21;
+  const median = s[10].v;
 
   let dots = "";
-  s.forEach((v, i) => {
-    const isMed = i === 10, isOwner = v === ownerPay && !s.slice(0,i).includes(ownerPay) && ownerPay !== staff.some(x=>x===ownerPay);
-    // owner = the value driven by the slider; mark the last occurrence in sorted order
-    const cls = "dot" + (isMed ? " median" : "") + (i === 20 && v === ownerPay ? " owner" : "");
+  s.forEach((p, i) => {
+    const cls = "dot" + (i === 10 ? " median" : "") + (p.owner ? " owner" : "");
     const row = (i % 2 === 0) ? 92 : 122;
-    dots += `<circle class="${cls}" cx="${X(v).toFixed(1)}" cy="${row}" r="9"/>`;
+    dots += `<circle class="${cls}" cx="${X(p.v).toFixed(1)}" cy="${row}" r="9"/>`;
   });
 
   svg.innerHTML =
@@ -159,7 +163,7 @@ function render(){
   $("meanV").textContent = "$" + Math.round(mean) + "K";
   $("medV").textContent  = "$" + median + "K";
   $("meanMoved").textContent = (mean - baseMean >= 0 ? "+$" : "-$") + Math.abs(Math.round(mean - baseMean)) + "K";
-  $("medMoved").textContent  = (median - 65 >= 0 ? "+$" : "-$") + Math.abs(median - 65) + "K";
+  $("medMoved").textContent  = (median - baseMed >= 0 ? "+$" : "-$") + Math.abs(median - baseMed) + "K";
   $("ownV").textContent = "$" + ownerPay + "K";
 }
 

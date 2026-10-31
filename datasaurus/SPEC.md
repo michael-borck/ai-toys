@@ -7,7 +7,7 @@ Sufficient to rebuild the toy from scratch.
 ## 1. The one thing it teaches
 
 **Summary statistics do not determine the shape of the data.** Thirteen datasets share means,
-standard deviations, and correlation to two decimal places while looking like completely
+standard deviations, and correlation to one decimal place while looking like completely
 different things — a dinosaur, a star, concentric rings, grid lines. Any analysis that only
 keeps the summary (a report table, a dashboard tile, headline metrics) cannot tell a tidy
 trend from a dinosaur.
@@ -15,7 +15,7 @@ trend from a dinosaur.
 **The "wait, what?" moment**
 
 > Switch from Dinosaur to Star: the picture changes completely and the stats panel moves
-> not one pixel (means 54.26/47.83, SDs 16.71/26.84, r ≈ −0.06, n = 142 — computed live, so
+> not one pixel (means 54.3/47.8, SDs 16.8/26.9, r ≈ −0.1, n = 142 — computed live, so
 > the refusal to move is honest). "Reveal all thirteen" is the payoff: the wall of shapes
 > under one frozen stat line.
 
@@ -38,6 +38,9 @@ bullseye→Bullseye, slant_up→Slant up, slant_down→Slant down, wide_lines→
 - Main scatter: SVG 400×300 viewBox, points drawn as circles (r 3.2) by `drawSet()`.
 - Stats panel: mean x/y, SD x/y, correlation, n — **computed live from the plotted points**
   (sample SD), not hardcoded, so the identical values are demonstrated, not asserted.
+  Displayed to 1 dp: the coordinates are embedded at 2 dp (§2), and at 2 dp the computed
+  stats wobble by up to a hundredth between sets (e.g. mean x 54.26 vs 54.27). At 1 dp they
+  are exactly constant, which keeps the refusal-to-move literal without cooking the numbers.
 - Picker: one button per dataset; active button amber.
 - "Reveal all thirteen": 13 small-multiple SVGs (r 2.6) with captions in a responsive wall;
   toggles.

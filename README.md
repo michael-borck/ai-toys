@@ -27,7 +27,7 @@ in an offline lab, from a USB stick, or uploaded to an LMS as a single file. Any
 | **[Pattern Spotter](pattern-spotter/)** | "the data speaks for itself": three charts, and more than one confident story fits each | ✅ ready |
 | **[Technique Picker](technique-picker/)** | "there is a default AI technique": five clients, five briefs, five different right answers | ✅ ready |
 | **[Scenario Sprint](scenario-sprint/)** | "technique selection is a technical detail": four client briefs, one 60-minute team sprint — frame it, pick it, defend it | ✅ ready |
-| **[Datasaurus](datasaurus/)** | "the summary statistics tell you what the data looks like": thirteen datasets, identical stats to two decimals, completely different shapes | ✅ ready |
+| **[Datasaurus](datasaurus/)** | "the summary statistics tell you what the data looks like": thirteen datasets, identical stats to one decimal, completely different shapes | ✅ ready |
 | **[Mean vs Median](mean-median/)** | "the average describes the typical person": drag the owner's pay past two million — the mean follows the money, the median follows the people | ✅ ready |
 | **[Best Fit](best-fit/)** | "a line through the middle is the best fit": draw your line, watch the squared errors as literal squares, lose to least squares | ✅ ready |
 | **[Gradient Descent](gradient-descent/)** | "training figures out the right answer": a ball, a slope, a step size — where it lands is an accident of where it started | ✅ ready |

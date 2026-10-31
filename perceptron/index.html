@@ -228,9 +228,15 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function run(){
   const btn = $("run");
   btn.disabled = true; btn.textContent = "Processing…";
+  /* Snapshot the inputs and lock the sliders: the run sleeps between steps, and a
+     mid-run slider move would otherwise label old products with new factors. */
+  const sliders = document.querySelectorAll('input[type="range"]');
+  sliders.forEach(s => s.disabled = true);
   reset();
 
-  const terms = ["budget","team","market"].map(k => state[k].v * state[k].w);
+  const factors = ["budget","team","market"].map(k => ({v:state[k].v, w:state[k].w}));
+  const thr = state.thr;
+  const terms = factors.map(f => f.v * f.w);
   const total = terms[0] + terms[1] + terms[2];
 
   for(const id of ["p1","p2","p3"]){
@@ -241,20 +247,20 @@ async function run(){
   await sleep(900);
 
   $("steps").hidden = false;
-  ["budget","team","market"].forEach((k, i) => {
-    $("c"+(i+1)+"v").textContent = `${state[k].v} × ${state[k].w} = ${terms[i]}`;
+  factors.forEach((f, i) => {
+    $("c"+(i+1)+"v").textContent = `${f.v} × ${f.w} = ${terms[i]}`;
     $("s"+(i+1)).classList.add("show");
   });
 
   await sleep(250); $("c4v").textContent =
-    `${total} ${total >= state.thr ? "≥" : "<"} ${state.thr}`;
+    `${total} ${total >= thr ? "≥" : "<"} ${thr}`;
   $("s4").classList.add("show");
   await sleep(500);
 
   const v = $("verdict");
-  if(total >= state.thr){
+  if(total >= thr){
     v.className = "band good show";
-    v.innerHTML = `APPROVED — total ${total} clears the threshold of ${state.thr}.` +
+    v.innerHTML = `APPROVED — total ${total} clears the threshold of ${thr}.` +
       `<small>Same data, different weights or threshold, and this flips. Where did the` +
       ` decision actually come from?</small>`;
     $("out-c").setAttribute("stroke", "#34d399");
@@ -262,13 +268,14 @@ async function run(){
     $("out-word").textContent = "approved"; $("out-word").setAttribute("fill", "#34d399");
   } else {
     v.className = "band bad show";
-    v.innerHTML = `REJECTED — total ${total} is under the threshold of ${state.thr}.` +
+    v.innerHTML = `REJECTED — total ${total} is under the threshold of ${thr}.` +
       `<small>Nothing about the inputs said no. The weights and threshold did.</small>`;
     $("out-c").setAttribute("stroke", "#f87171");
     $("out-emoji").textContent = "✗"; $("out-emoji").setAttribute("fill", "#f87171");
     $("out-word").textContent = "rejected"; $("out-word").setAttribute("fill", "#f87171");
   }
 
+  sliders.forEach(s => s.disabled = false);
   btn.disabled = false; btn.textContent = "Run it again";
 }
 $("run").addEventListener("click", run);

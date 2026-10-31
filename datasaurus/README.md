@@ -3,7 +3,7 @@
 Kills: **"the summary statistics tell you what the data looks like."**
 
 Thirteen datasets — a dinosaur, a star, a bullseye, horizontal lines — with identical means,
-standard deviations, and correlation to two decimal places. Switch between them while the stats
+standard deviations, and correlation to one decimal place. Switch between them while the stats
 panel refuses to move, then reveal all thirteen side by side. A regression, an outlier hunt, and
 a cluster analysis would report the same numbers for all of them. Plot the data.
 

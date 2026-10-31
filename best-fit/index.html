@@ -184,7 +184,15 @@ function render(){
             fill="#34d399" font-weight="700">machine</text>`;
   }
 
+  /* Rebuilding the SVG destroys the focused handle; remember it and refocus its
+     replacement, or keyboard users lose focus after a single arrow-key step. */
+  const ae = document.activeElement;
+  const focusH = (ae && ae.classList && ae.classList.contains("handle")) ? ae.dataset.h : null;
   svg.innerHTML = g;
+  if(focusH){
+    const el = svg.querySelector('.handle[data-h="' + focusH + '"]');
+    if(el) el.focus();
+  }
 
   const youSSE = sse(yourLine);
   const pen = youSSE/optSSE;

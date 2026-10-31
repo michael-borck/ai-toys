@@ -72,8 +72,8 @@
 <body>
 <header>
   <h1>Datasaurus: <span>the summary is not the data</span></h1>
-  <p class="sub">Thirteen datasets. Every summary statistic below is identical to two decimal
-     places. Switch between them and watch the numbers refuse to move &mdash; while the picture
+  <p class="sub">Thirteen datasets. Every summary statistic below is identical to one decimal
+     place. Switch between them and watch the numbers refuse to move &mdash; while the picture
      changes completely.</p>
 </header>
 
@@ -92,12 +92,12 @@
     <div class="card">
       <h3>Summary statistics</h3>
       <div class="stats">
-        <div class="stat"><div class="v" id="mx">54.26</div><div class="w">mean of x</div></div>
-        <div class="stat"><div class="v" id="my">47.83</div><div class="w">mean of y</div></div>
-        <div class="stat"><div class="v" id="sx">16.71</div><div class="w">std dev of x</div></div>
-        <div class="stat"><div class="v" id="sy">26.84</div><div class="w">std dev of y</div></div>
-        <div class="stat"><div class="v" id="rr">&minus;0.06</div><div class="w">correlation</div></div>
-        <div class="stat"><div class="v">142</div><div class="w">points</div></div>
+        <div class="stat"><div class="v" id="mx">–</div><div class="w">mean of x</div></div>
+        <div class="stat"><div class="v" id="my">–</div><div class="w">mean of y</div></div>
+        <div class="stat"><div class="v" id="sx">–</div><div class="w">std dev of x</div></div>
+        <div class="stat"><div class="v" id="sy">–</div><div class="w">std dev of y</div></div>
+        <div class="stat"><div class="v" id="rr">–</div><div class="w">correlation</div></div>
+        <div class="stat"><div class="v" id="np">–</div><div class="w">points</div></div>
       </div>
       <p class="note" style="margin-top:10px;">Computed live from whichever dataset is plotted.
          <b>They will not move.</b> That is not a bug &mdash; that is the whole argument.</p>
@@ -154,10 +154,34 @@ function drawSet(svg, pts, r){
   svg.innerHTML = s;
 }
 
+/* Computed live from the plotted points (sample SD), shown to 1 dp: the coordinates are
+   embedded at 2 dp, so at 2 dp the last digit wobbles by a hundredth between sets. */
+function stats(pts){
+  const n = pts.length/2;
+  let mx=0, my=0;
+  for(let i=0;i<pts.length;i+=2){ mx += pts[i]; my += pts[i+1]; }
+  mx /= n; my /= n;
+  let vx=0, vy=0, cxy=0;
+  for(let i=0;i<pts.length;i+=2){
+    const dx = pts[i]-mx, dy = pts[i+1]-my;
+    vx += dx*dx; vy += dy*dy; cxy += dx*dy;
+  }
+  return {n, mx, my,
+          sx: Math.sqrt(vx/(n-1)), sy: Math.sqrt(vy/(n-1)),
+          r: cxy/Math.sqrt(vx*vy)};
+}
+
 function show(k){
   cur = k;
   $("setname").textContent = LABELS[k];
   drawSet($("plot"), SETS[k], 3.2);
+  const s = stats(SETS[k]);
+  $("mx").textContent = s.mx.toFixed(1);
+  $("my").textContent = s.my.toFixed(1);
+  $("sx").textContent = s.sx.toFixed(1);
+  $("sy").textContent = s.sy.toFixed(1);
+  $("rr").textContent = s.r.toFixed(1).replace("-","−");
+  $("np").textContent = s.n;
   document.querySelectorAll("#picker button").forEach(b =>
     b.classList.toggle("on", b.dataset.k === k));
 }
