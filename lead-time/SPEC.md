@@ -14,7 +14,7 @@ statistic that can actually prove a screening programme works.
 **The "wait, what?" moment**
 
 > Drag "screening starts" from 2029 back to 2007: mean survival after diagnosis climbs from
-> ~4.8 to ~9.8 years and the 5-year survival rate goes 50% → 100%, while the death card reads
+> ~4.2 to ~9.8 years and the 5-year survival rate goes 42% → 100%, while the death card reads
 > "2012 – 2030" — unchanged. Nobody lived longer. We started counting earlier.
 
 ## 2. Data (frozen, no randomness)
@@ -30,8 +30,8 @@ Screening rule, for programme start year S:
 - onset < S < death → diagnosed at S (caught at the first screen after onset)
 - S ≥ death → symptomatic diagnosis at onset + 5 (programme came too late to matter)
 
-Verified headline numbers: S = 2029 (effectively none) → mean survival ≈ 4.8 yrs, 5-year
-survival 50%; S = 2007 → mean ≈ 9.8 yrs, 100%. Deaths 2012–2030 in both worlds.
+Verified headline numbers: S = 2029 (effectively none) → mean survival ≈ 4.2 yrs, 5-year
+survival 42%; S = 2007 → mean ≈ 9.8 yrs, 100%. Deaths 2012–2030 in both worlds.
 
 ## 3. Mechanics
 

@@ -73,6 +73,8 @@
   .checklist{list-style:none; padding-left:0;}
   .checklist li{margin-bottom:6px; padding-left:1.4em; position:relative;}
   .checklist li::before{content:"☐"; position:absolute; left:0; color:var(--accent);}
+  footer{color:var(--muted); font-size:.74em; line-height:1.6; margin-top:18px;}
+  footer a{color:var(--muted);}
 </style>
 </head>
 <body>
@@ -89,6 +91,7 @@
   <button id="reset">Reset</button>
   <span class="lbl">Suggested rhythm: 45 min team work &rarr; 15 min pitches (3 min each +
     1 min questions).</span>
+  <span id="live" role="status" aria-live="polite" style="position:absolute; left:-9999px"></span>
 </div>
 
 <main>
@@ -317,6 +320,8 @@
 </main>
 
 <footer>
+  A classroom activity scaffold: four fictional clients and one timer. Nothing is recorded
+  or sent anywhere. No network, no storage, no analytics. Part of <a href="../">ai-toys</a>.
 </footer>
 
 <script>
@@ -330,26 +335,38 @@ document.querySelectorAll(".scard").forEach(btn => {
     if(!on){
       btn.setAttribute("aria-pressed", "true");
       $("d-" + btn.dataset.t).classList.add("open");
+      $("live").textContent = btn.querySelector("h4").textContent + " selected. Brief shown below.";
+    } else {
+      $("live").textContent = "Client deselected.";
     }
   });
 });
 
-let left = 60 * 60, ticking = null;
+/* Deadline-based, not decrement-per-tick: interval timers are throttled in hidden
+   tabs, and a projected classroom clock must track wall-clock time. */
+let left = 60 * 60, ticking = null, deadline = null;
 function paint(){
   const m = Math.floor(left / 60), s = left % 60;
   $("clock").textContent = m + ":" + String(s).padStart(2, "0");
 }
+function syncLeft(){
+  if(deadline !== null) left = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+}
 $("start").addEventListener("click", () => {
-  if(ticking){ clearInterval(ticking); ticking = null; $("start").textContent = "Resume"; return; }
+  if(ticking){ syncLeft(); clearInterval(ticking); ticking = null; deadline = null;
+    $("start").textContent = "Resume"; paint(); return; }
+  if(left === 0) left = 60 * 60;
+  deadline = Date.now() + left * 1000;
   $("start").textContent = "Pause";
   ticking = setInterval(() => {
-    left = Math.max(0, left - 1); paint();
-    if(left === 0){ clearInterval(ticking); ticking = null; $("start").textContent = "Time"; }
-  }, 1000);
+    syncLeft(); paint();
+    if(left === 0){ clearInterval(ticking); ticking = null; deadline = null;
+      $("start").textContent = "Time"; $("live").textContent = "Time. The sixty minutes are up."; }
+  }, 250);
 });
 $("reset").addEventListener("click", () => {
   if(ticking){ clearInterval(ticking); ticking = null; }
-  left = 60 * 60; paint(); $("start").textContent = "Start timer";
+  deadline = null; left = 60 * 60; paint(); $("start").textContent = "Start timer";
 });
 
 if(new URLSearchParams(location.search).has("present")) document.body.classList.add("present");

@@ -62,7 +62,8 @@
   tr.single td{background:#f8717114;} tr.single td.crowd{color:var(--bad);}
   tr.risky td{background:#fbbf240e;} tr.risky td.crowd{color:var(--warn);}
   tr.crowded td.crowd{color:var(--good);}
-  tr[aria-selected=true] td{outline:1px solid #3b82f6; outline-offset:-1px;}
+  tr.sel td{outline:1px solid #3b82f6; outline-offset:-1px;}
+  .rowbtn{background:none; border:0; color:inherit; font:inherit; cursor:pointer; padding:0 2px;}
   .tblnote{font-size:.72em; color:var(--muted); margin-top:8px; line-height:1.5;}
 
   /* ---- readouts ---- */
@@ -250,13 +251,13 @@ function setRungs(r){
 /* ---- table scaffolding ---- */
 const trEls = ROWS.map((row,idx) => {
   const tr = document.createElement("tr");
-  tr.tabIndex = 0; tr.setAttribute("role","button");
-  tr.innerHTML = "<td>"+(idx+1)+"</td>" + "<td></td>".repeat(5) +
+  /* A real button in the first cell carries keyboard focus and activation; the row
+     itself stays a row (role="button" on a <tr> breaks table semantics). */
+  tr.innerHTML = '<td><button type="button" class="rowbtn" aria-pressed="false" ' +
+                 'aria-label="Show linkage search for ticket '+(idx+1)+'">'+(idx+1)+'</button></td>' +
+                 "<td></td>".repeat(5) +
                  '<td class="issue">'+row[5]+'</td><td class="crowd"></td>';
   tr.addEventListener("click", () => { state.sel = idx; render(); });
-  tr.addEventListener("keydown", e => {
-    if(e.key === "Enter" || e.key === " "){ e.preventDefault(); state.sel = idx; render(); }
-  });
   $("tbody").appendChild(tr); return tr;
 });
 
@@ -281,9 +282,10 @@ function render(){
     const cells = tr.querySelectorAll("td");
     tuples[idx].forEach((v,i) => cells[i+1].textContent = v);
     const s = sizes[idx];
-    tr.className = s === 1 ? "single" : s < 5 ? "risky" : "crowded";
+    tr.className = (s === 1 ? "single" : s < 5 ? "risky" : "crowded") +
+      (state.sel === idx ? " sel" : "");
     cells[7].textContent = s === 1 ? "1 · SINGLED OUT" : s < 5 ? s+" · AT RISK" : s+" · IN A CROWD";
-    tr.setAttribute("aria-selected", String(state.sel === idx));
+    tr.querySelector(".rowbtn").setAttribute("aria-pressed", String(state.sel === idx));
   });
 
   const kv = $("kval");

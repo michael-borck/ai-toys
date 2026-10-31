@@ -216,6 +216,16 @@ function render(){
   const sorted = pr.map((r,i)=>({...r,i})).sort((a,b)=>b.p-a.p);
   const dist = $("dist");
   dist.innerHTML = "";
+  /* If sampling advanced to a follow-on distribution, the sampled bar has left the
+     table; pin it on top so the SAMPLED mark survives the advance (SPEC §2). */
+  if(state.last !== null && state.last.p === state.p && state.last.dist !== state.dist){
+    const prev = document.createElement("div");
+    prev.className = "brow sampled";
+    prev.innerHTML = '<span class="tok">'+state.last.t+'</span>' +
+      '<span class="bar"><i style="width:'+(state.last.pv*100).toFixed(2)+'%"></i></span>' +
+      '<span class="pc">'+(state.last.pv*100).toFixed(1)+'% · SAMPLED</span>';
+    dist.appendChild(prev);
+  }
   sorted.forEach(r => {
     const row = document.createElement("div");
     const sampledHere = state.last !== null && state.last.dist === state.dist && state.last.i === r.i && state.last.p === state.p;
@@ -239,7 +249,7 @@ $("sample").addEventListener("click", () => {
   const r = pr[pick];
   const rank = pr.map((x,i)=>({p:x.p,i})).sort((a,b)=>b.p-a.p).findIndex(x=>x.i===pick) + 1;
   state.tokens.push(r.t);
-  state.last = {p:state.p, dist:state.dist, i:pick};
+  state.last = {p:state.p, dist:state.dist, i:pick, t:r.t, pv:r.p};
   const v = $("verdict");
   const ordinal = ["","most likely","2nd most likely","3rd most likely","4th most likely"][rank] || rank+"th most likely";
   if(rank === 1){

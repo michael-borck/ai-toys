@@ -70,6 +70,8 @@
          padding:16px 18px; margin-bottom:14px; line-height:1.65; font-size:.9em;}
   .final b{color:var(--warn);}
   .score{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; color:var(--ink);}
+  footer{color:var(--muted); font-size:.74em; line-height:1.6; margin-top:18px;}
+  footer a{color:var(--muted);}
 </style>
 </head>
 <body>
@@ -92,12 +94,12 @@
     <p class="q">What kind of machine-learning problem have they got?</p>
     <div class="opts">
       <button class="opt"><b>A.</b> Classification &mdash; it is a banking decision</button>
-      <button class="opt"><b>B.</b> Regression &mdash; it predicts a continuous amount</button>
-      <button class="opt"><b>C.</b> Clustering &mdash; group similar customers first</button>
+      <button class="opt"><b>B.</b> Clustering &mdash; group similar customers first</button>
+      <button class="opt"><b>C.</b> Regression &mdash; it predicts a continuous amount</button>
       <button class="opt"><b>D.</b> Neither &mdash; rules-based systems only</button>
     </div>
     <div class="fb" role="status" aria-live="polite">
-      <b>B. Regression.</b>
+      <b>C. Regression.</b>
       <p class="why">The output is a dollar amount &mdash; continuous. Banking context does not
          make it classification; "approve/decline" would be, "how much?" is not.</p>
       <p class="ins"><b>Consultant's rule:</b> when the business question is "how much?",
@@ -115,13 +117,13 @@
       <i>&mdash; client brief, Chief Medical Officer</i></div>
     <p class="q">Which technique do you recommend?</p>
     <div class="opts">
-      <button class="opt"><b>A.</b> SVM &mdash; top accuracy on clinical data</button>
-      <button class="opt"><b>B.</b> Decision tree &mdash; transparent if-then rules</button>
+      <button class="opt"><b>A.</b> Decision tree &mdash; transparent if-then rules</button>
+      <button class="opt"><b>B.</b> SVM &mdash; top accuracy on clinical data</button>
       <button class="opt"><b>C.</b> Random forest &mdash; best raw predictive performance</button>
       <button class="opt"><b>D.</b> k-NN &mdash; recommend by similar past patients</button>
     </div>
     <div class="fb" role="status" aria-live="polite">
-      <b>B. Decision tree.</b>
+      <b>A. Decision tree.</b>
       <p class="why">When decisions must be explained to clinicians, patients, and regulators,
          interpretability outranks small accuracy gains. A tree's if-then rules can be read,
          challenged, and audited.</p>
@@ -140,12 +142,12 @@
     <p class="q">What matters most in the technique you pick?</p>
     <div class="opts">
       <button class="opt"><b>A.</b> Local similarity (k-NN) &mdash; match each review to similar ones</button>
-      <button class="opt"><b>B.</b> High-dimensional handling (SVM) &mdash; built for wide feature spaces</button>
-      <button class="opt"><b>C.</b> Simple interpretable rules (tree) &mdash; see why each review counts</button>
-      <button class="opt"><b>D.</b> Ensemble power (random forest) &mdash; maximise accuracy</button>
+      <button class="opt"><b>B.</b> Simple interpretable rules (tree) &mdash; see why each review counts</button>
+      <button class="opt"><b>C.</b> Ensemble power (random forest) &mdash; maximise accuracy</button>
+      <button class="opt"><b>D.</b> High-dimensional handling (SVM) &mdash; built for wide feature spaces</button>
     </div>
     <div class="fb" role="status" aria-live="polite">
-      <b>B. SVM.</b>
+      <b>D. SVM.</b>
       <p class="why">Hundreds of text-derived features make this a classic high-dimensional
          problem, and SVMs are built to find separating boundaries in exactly that geometry.</p>
       <p class="ins"><b>Consultant's rule:</b> the shape of the data (wide, sparse, text-like)
@@ -237,14 +239,17 @@
 </main>
 
 <footer>
+  Five fictional briefs with scripted feedback; your picks are never recorded or sent
+  anywhere. No network, no storage, no analytics. Part of <a href="../">ai-toys</a>.
 </footer>
 
 <script>
 const $ = id => document.getElementById(id);
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const N = 5;
-let cur = 0, score = 0;
+let score = 0;
 
-const RIGHT = {1:1, 2:1, 3:1, 4:1, 5:2};  // index of the correct option per card
+const RIGHT = {1:2, 2:0, 3:3, 4:1, 5:2};  // index of the correct option per card
 
 document.querySelectorAll(".card .opt").forEach((btn, i) => {
   const card = btn.closest(".card");
@@ -284,7 +289,7 @@ document.querySelectorAll(".card .next").forEach((nx, i) => {
       $("prog").style.width = "100%";
       $("score").textContent = score + "/" + N;
     }
-    window.scrollTo({top:0, behavior:"smooth"});
+    window.scrollTo({top:0, behavior:reduced ? "auto" : "smooth"});
   });
 });
 

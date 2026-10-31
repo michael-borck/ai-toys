@@ -44,6 +44,9 @@ if(new URLSearchParams(location.search).has("present")) document.body.classList.
   toy; a red band must mean the same thing in all seventeen.
 - **Monospace only for data** the student is meant to read as a value: tokens, scores, table rows,
   probabilities. Never for prose.
+- **`innerHTML` is for constants and computed numbers only.** Anything a user typed or could
+  influence goes through `textContent`, never string building. Today no toy takes free text;
+  this rule is what keeps it that way safely if one ever does.
 
 ## Role colours
 

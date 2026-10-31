@@ -32,6 +32,7 @@
             padding:6px;}
   svg{width:100%; height:auto; display:block; touch-action:none; user-select:none;
       cursor:crosshair;}
+  svg:focus-visible{outline:2px solid #3b82f6; outline-offset:2px;}
   text{font-family:inherit;}
   .curve{stroke:var(--system); stroke-width:3; fill:none;}
   .trail{fill:var(--accent); opacity:.45;}
@@ -68,6 +69,8 @@
   .wait b{color:var(--warn);}
   .wait p{margin-bottom:9px;}
   .wait p:last-child{margin-bottom:0;}
+  footer{color:var(--muted); font-size:.74em; line-height:1.6; margin-top:18px;}
+  footer a{color:var(--muted);}
 </style>
 </head>
 <body>
@@ -81,11 +84,13 @@
 <main>
   <div class="card">
     <div class="plotwrap">
-      <svg id="plot" viewBox="0 0 900 380" role="img" aria-label="Error curve with two valleys:
+      <svg id="plot" viewBox="0 0 900 380" tabindex="0" role="img" aria-label="Error curve with two valleys:
         a shallow one on the right and a deep one on the left. The ball rolls against the slope
-        and settles in a valley; where it lands depends on where it started and the step size."></svg>
+        and settles in a valley; where it lands depends on where it started and the step size.
+        Focus this chart and use the left and right arrow keys to place the ball."></svg>
     </div>
-    <p class="note" style="margin-top:10px;">Click the curve to <b>drop the ball</b> anywhere.
+    <p class="note" style="margin-top:10px;">Click the curve to <b>drop the ball</b> anywhere
+       (or focus the chart and use the arrow keys).
        There are two valleys: the shallow one on the right and the deep one on the left. The
        ball does not know which is which &mdash; it only ever checks the slope under its feet.</p>
     <div class="readout">
@@ -128,6 +133,9 @@
 </main>
 
 <footer>
+  A one-dial cartoon of training: the landscape is authored, every step is real arithmetic
+  on it. No AI runs on this page. No network, no storage, no analytics. Part of
+  <a href="../">ai-toys</a>.
 </footer>
 
 <script>
@@ -209,13 +217,24 @@ function judge(){
   return false;
 }
 
+const MAX_STEPS = 200;
 function stepOnce(){
   if($("verdict").classList.contains("show")) return;
   trail.push({w});
   w = w - lr * grad(w) * STEP_SCALE;
   steps++;
+  /* Clamp before render so the ball and the readouts agree; judge() still sees the
+     out-of-range value and calls it diverged. */
+  w = Math.max(-0.4, Math.min(10.4, w));
   render();
-  judge();
+  const done = judge();
+  if(!done && steps >= MAX_STEPS){
+    const v = $("verdict");
+    v.classList.add("bad","show");
+    v.textContent = "Stopped after " + MAX_STEPS + " steps — still bouncing, never settling. " +
+      "The step size is the problem: shrink the learning rate.";
+    stopRun();
+  }
 }
 function stopRun(){
   $("runBtn").textContent = "Run";
@@ -237,9 +256,32 @@ $("dropBtn").addEventListener("click", () => {
 });
 $("clearBtn").addEventListener("click", () => { trail = []; render(); });
 
-$("plot").addEventListener("pointerdown", e => {
+function dropAt(nw){
   stopRun();
+  w = Math.max(WMIN, Math.min(WMAX, nw));
+  steps = 0; trail = [];
+  $("verdict").className = "band";
+  render();
+}
+$("plot").addEventListener("pointerdown", e => {
   const r = $("plot").getBoundingClientRect();
+  const px = (e.clientX - r.left)/r.width * W;
+  dropAt(WMIN + (px-PL)/(W-PL-PR)*(WMAX-WMIN));
+});
+$("plot").addEventListener("keydown", e => {
+  const step = e.shiftKey ? 0.5 : 0.1;
+  if(e.key === "ArrowLeft") dropAt(w - step);
+  else if(e.key === "ArrowRight") dropAt(w + step);
+  else return;
+  e.preventDefault();
+});
+
+if(new URLSearchParams(location.search).has("present")) document.body.classList.add("present");
+render();
+</script>
+</body>
+</html>
+ClientRect();
   const px = (e.clientX - r.left)/r.width * W;
   w = Math.max(WMIN, Math.min(WMAX, WMIN + (px-PL)/(W-PL-PR)*(WMAX-WMIN)));
   steps = 0; trail = [];

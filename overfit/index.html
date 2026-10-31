@@ -74,7 +74,8 @@
 <header>
   <h1>Overfit: <span>the exam the model wrote itself</span></h1>
   <p class="sub">
-    Sixty labelled points to learn from, sixty fresh ones held back. One slider makes the model
+    Sixty-six labelled points to learn from (six of them mislabelled strays), sixty fresh ones
+    held back. One slider makes the model
     more flexible. Training accuracy will love you for dragging it right. Watch what the fresh
     points think.
   </p>
@@ -185,14 +186,25 @@ const W = cv.width, H = cv.height;
 
 const COL = {a:"#2dd4bf", b:"#a78bfa", aTint:"rgba(45,212,191,.13)", bTint:"rgba(167,139,250,.13)"};
 
+/* The tint grid depends only on k: classify it once per stop and cache it, instead
+   of ~5,800 kNN queries on every slider input event. */
+const gridCache = {};
+function gridFor(k){
+  if(gridCache[k]) return gridCache[k];
+  const GX=88, GY=66, cells=new Uint8Array(GX*GY);
+  for(let gy=0; gy<GY; gy++)
+    for(let gx=0; gx<GX; gx++)
+      cells[gy*GX+gx] = knn({x:(gx+.5)/GX, y:(gy+.5)/GY}, k);
+  return gridCache[k] = {GX,GY,cells};
+}
+
 function drawMap(){
   const k = KS[state.stop];
   ctx.clearRect(0,0,W,H);
-  const GX=88, GY=66;
+  const {GX,GY,cells} = gridFor(k);
   for(let gy=0; gy<GY; gy++){
     for(let gx=0; gx<GX; gx++){
-      const p = {x:(gx+.5)/GX, y:(gy+.5)/GY};
-      ctx.fillStyle = knn(p,k)===0 ? COL.aTint : COL.bTint;
+      ctx.fillStyle = cells[gy*GX+gx]===0 ? COL.aTint : COL.bTint;
       ctx.fillRect(gx*W/GX, H-(gy+1)*H/GY, W/GX+1, H/GY+1);
     }
   }

@@ -60,9 +60,9 @@ inverted k across seven stops: **k = 31, 21, 15, 9, 5, 3, 1** (left = simplest).
 because the boundary is real (no faked artwork), cheap (120 points), and k=1 reliably produces
 one island per noise point.
 
-Boundary painting: classify a 90×70 grid of the unit square against the training set, tint each
-cell by predicted class at low alpha. Recompute on slider move; 6,300 kNN queries against 66
-points is instant.
+Boundary painting: classify an 88×66 grid of the unit square against the training set, tint
+each cell by predicted class at low alpha. The grid depends only on k, so it is classified
+once per stop and cached (5,808 kNN queries against 66 points, first visit to each stop).
 
 Verified curve for seed 36 (rebuilds must reproduce it; train/test accuracy % per stop):
 

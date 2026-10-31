@@ -67,6 +67,8 @@
   .wait b{color:var(--warn);}
   .attr{font-size:.72em; color:var(--muted); line-height:1.6; margin-top:12px;}
   .attr b{color:var(--ink);}
+  footer{color:var(--muted); font-size:.74em; line-height:1.6; margin-top:18px;}
+  footer a{color:var(--muted);}
 </style>
 </head>
 <body>
@@ -101,6 +103,7 @@
       </div>
       <p class="note" style="margin-top:10px;">Computed live from whichever dataset is plotted.
          <b>They will not move.</b> That is not a bug &mdash; that is the whole argument.</p>
+      <p id="live" role="status" aria-live="polite" style="position:absolute; left:-9999px"></p>
     </div>
 
     <div class="card">
@@ -124,6 +127,9 @@
 </main>
 
 <footer>
+  Data: the Datasaurus Dozen (Matejka &amp; Fitzmaurice, Autodesk Research), embedded so the
+  page works offline; statistics computed live on this page. No network, no storage, no
+  analytics. Part of <a href="../">ai-toys</a>.
 </footer>
 
 <script>
@@ -182,6 +188,9 @@ function show(k){
   $("sy").textContent = s.sy.toFixed(1);
   $("rr").textContent = s.r.toFixed(1).replace("-","−");
   $("np").textContent = s.n;
+  $("live").textContent = LABELS[k] + " plotted. Statistics unchanged: mean x " + s.mx.toFixed(1) +
+    ", mean y " + s.my.toFixed(1) + ", std dev x " + s.sx.toFixed(1) + ", std dev y " +
+    s.sy.toFixed(1) + ", correlation " + s.r.toFixed(1) + ", " + s.n + " points.";
   document.querySelectorAll("#picker button").forEach(b =>
     b.classList.toggle("on", b.dataset.k === k));
 }

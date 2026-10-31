@@ -336,6 +336,11 @@ function render(){
       : "Centroids moved. Assign again; repeat until nothing changes.";
   }
 
+  if(state.assign && sizes(state.assign,state.k).includes(0)){
+    v.textContent += " An empty segment sits in this answer: the algorithm doesn't mind; do you?";
+    if(v.className === "band ok") v.className = "band warn";
+  }
+
   $("sr").textContent = "Iteration " + state.iters + (state.converged ? ", converged." : "") +
     (d !== null ? " Total distance " + d.toFixed(2) + "." : "");
   draw();
