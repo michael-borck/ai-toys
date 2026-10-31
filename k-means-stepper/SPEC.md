@@ -60,15 +60,20 @@ drifts, and the rest follow; verified the hard way):
 - **Blob R** (12 points) at μ=(0.50, 0.18), σ=(0.06, 0.05); all coordinates clamped [0.04, 0.96].
 - Generation order is P, Q, clump, R (x then y per point); changing it changes the dataset.
 
-Verified at build (rebuilds must reproduce): k=3 **Start A converges in 2 iterations to
+Verified at build (rebuilds must reproduce): k=3 **Start A converges in 3 iterations to
 (P+clump 28, Q 20, R 12), total distance 6.18**; **Start B converges to (P 18, clump+Q 30,
 R 12), distance 6.26** (1.2% apart); the two partitions **disagree on 10 of 60 points**
 (best-permutation matching). Start C converges with Start A's basin (three starts so "best of
 several restarts" is demonstrable: the honest practitioners' fix, named in the closing card).
 
-Starts are **fixed centroid coordinates per (k, start)**, hand-placed, never sampled at runtime;
-the k=3 pair that produces the two truths: A = (0.33,0.70), (0.80,0.70), (0.50,0.20);
-B = (0.18,0.70), (0.65,0.70), (0.50,0.20); C = (0.18,0.70), (0.78,0.70), (0.50,0.20).
+Starts are **fixed centroid coordinates per (k, start)**, never sampled at runtime, but they are
+deliberately **scattered in empty space, never on a blob** — an earlier build parked them on the
+blob centres, which leaked the answer and converged before students saw any travel. Each shipped
+set was sampled once with a seeded PRNG and kept only if every centroid sat ≥0.16 from every
+blob centre and ≥0.20 from its siblings, yet still converged (in 3–7 Assign steps, so the journey
+is visible) to the verified partitions above. The k=3 pair that produces the two truths:
+A = (0.22,0.12), (0.33,0.48), (0.88,0.25); B = (0.63,0.91), (0.75,0.12), (0.12,0.10);
+C = (0.83,0.10), (0.38,0.49), (0.93,0.30).
 For k=5, Start A splits Q (9+11), Start B splits P (9+9); k=4 Start B splits R (7+5). All 12
 shipped (k, start) combinations verified to converge with no empty clusters.
 
@@ -90,7 +95,9 @@ shipped (k, start) combinations verified to converge with no empty clusters.
   similar tickets sit near each other" is doing the work a real pipeline does with embeddings
   plus projection, and the closing card says so.
 - **Three fixed starts, not random restarts.** Real practice runs many random starts and keeps
-  the best distance; fixed starts keep the disagreement reproducible on a projector.
+  the best distance; fixed starts keep the disagreement reproducible on a projector. The fixed
+  starts are scattered in empty space (§3), so they look and behave like careless random inits
+  without giving up that reproducibility.
 - **Euclidean distance**, while text pipelines mostly use cosine on normalised vectors; the
   behavioural lesson is identical.
 - **No elbow plots or silhouette scores.** They exist and help; they also just move the human
